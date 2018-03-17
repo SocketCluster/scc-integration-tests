@@ -4,7 +4,7 @@
   "description": "Integration tests for SCC",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --reporter spec --timeout 3000 --slow 3000"
+    "test": "mocha --reporter spec --timeout 10000 --slow 10000"
   },
   "repository": {
     "type": "git",
@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/SocketCluster/scc-integration-tests#readme",
   "dependencies": {
-    "mocha": "^5.0.4"
+    "mocha": "^5.0.4",
+    "uuid": "^3.2.1"
   }
 }
