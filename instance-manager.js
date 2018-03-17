@@ -104,17 +104,72 @@ InstanceManager.prototype.generateRandomSCCInstanceName = function (instanceType
   return `scc-${instanceType}-` + uuid.v4();
 };
 
+InstanceManager.prototype.generateSCCInstanceClusterDetailsList = function (options) {
+  let instanceDetailList = [];
+
+  let stateInstanceStartPort = options.stateInstanceStartPort || 7777;
+  let regularInstanceStartPort = options.regularInstanceStartPort || 8000;
+  let brokerInstanceStartPort = options.brokerInstanceStartPort || 8888;
+
+  instanceDetailList.push({
+    type: 'state',
+    name: this.generateRandomSCCInstanceName('state'),
+    port: stateInstanceStartPort
+  });
+  for (let i = 0; i < options.regularInstanceCount; i++) {
+    instanceDetailList.push({
+      type: 'regular',
+      name: this.generateRandomSCCInstanceName('regular'),
+      port: regularInstanceStartPort + i
+    });
+  }
+  for (let i = 0; i < options.brokerInstanceCount; i++) {
+    instanceDetailList.push({
+      type: 'broker',
+      name: this.generateRandomSCCInstanceName('broker'),
+      port: brokerInstanceStartPort + i
+    });
+  }
+  return instanceDetailList;
+};
+
+InstanceManager.prototype.waitForTimeout = function (delay) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve();
+    }, delay);
+  });
+};
+
+InstanceManager.prototype.launchSCCInstanceCluster = async function (clusterDetailsList, readyDelay) {
+  let launchInstancePromises = clusterDetailsList.map((instanceDetails) => {
+    return this.launchSCCInstance(instanceDetails.type, instanceDetails.port, instanceDetails.name);
+  });
+  await Promise.all(launchInstancePromises);
+  await this.waitForTimeout(readyDelay || 1000);
+};
+
 InstanceManager.prototype.launchSubscriberNodeInstance = function (instanceName, options) {
   let optionsString = JSON.stringify(options || {});
   let args = ['--options', optionsString];
   return new Promise((resolve, reject) => {
-    this.activeNodeInstanceMap[instanceName] = fork(this.config.subscriberInstancePath, args, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
+    let instanceProcess = fork(this.config.subscriberInstancePath, args);
+    instanceProcess.on('error', (err) => {
+      instanceProcess.removeAllListeners('error');
+      instanceProcess.removeAllListeners('message');
+      reject(err);
+    });
+    instanceProcess.receivedMessages = [];
+    instanceProcess.on('message', (message) => {
+      if (message.type === 'ready') {
+        instanceProcess.removeAllListeners('error');
+        resolve(instanceProcess);
+      } else if (message.type === 'received') {
+        instanceProcess.receivedMessages.push(message);
       }
     });
+    instanceProcess.instanceName = instanceName;
+    this.activeNodeInstanceMap[instanceName] = instanceProcess;
   });
 };
 
@@ -122,14 +177,26 @@ InstanceManager.prototype.launchPublisherNodeInstance = function (instanceName, 
   let optionsString = JSON.stringify(options || {});
   let args = ['--options', optionsString];
   return new Promise((resolve, reject) => {
-    this.activeNodeInstanceMap[instanceName] = fork(this.config.publisherInstancePath, args, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        this.activeNodeInstanceMap.push(instanceName);
-        resolve();
+    let instanceProcess = fork(this.config.publisherInstancePath, args);
+    instanceProcess.on('error', (err) => {
+      instanceProcess.removeAllListeners('error');
+      instanceProcess.removeAllListeners('message');
+      reject(err);
+    });
+    instanceProcess.sentMessages = [];
+    instanceProcess.failedToSendMessages = [];
+    instanceProcess.on('message', (message) => {
+      if (message.type === 'ready') {
+        instanceProcess.removeAllListeners('error');
+        resolve(instanceProcess);
+      } else if (message.type === 'sent') {
+        instanceProcess.sentMessages.push(message);
+      } else if (message.type === 'failedToSend') {
+        instanceProcess.failedToSendMessages.push(message);
       }
     });
+    instanceProcess.instanceName = instanceName;
+    this.activeNodeInstanceMap[instanceName] = instanceProcess;
   });
 };
 

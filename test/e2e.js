@@ -18,8 +18,8 @@ const config = {
     versionTag: 'v1.6.3',
     internalContainerPort: 8888
   },
-  subscriberInstancePath: path.join(__dirname, 'client-subscribers.js'),
-  publisherInstancePath: path.join(__dirname, 'client-publishers.js')
+  subscriberInstancePath: path.resolve(__dirname, '..', 'client-subscribers.js'),
+  publisherInstancePath: path.resolve(__dirname, '..', 'client-publishers.js')
 };
 
 let instances = new InstanceManager(config);
@@ -28,12 +28,12 @@ before(async function () {
   await instances.destroyAllDockerInstances();
 });
 
-describe('Basic tests', () => {
+describe('Basic tests without instance failures', () => {
   afterEach(async function () {
     await instances.destroyAllDockerInstances();
   });
 
-  describe('Instances launch successfully', function () {
+  describe.skip('Instances launch successfully', function () {
     describe('One of each type', function () {
       let stateInstanceName;
       let regularInstanceName;
@@ -53,11 +53,11 @@ describe('Basic tests', () => {
 
       it('should run all instances successfully', async function () {
         let isStateInstanceRunning = await instances.isInstanceRunning(stateInstanceName);
-        assert(isStateInstanceRunning, true);
+        assert.equal(isStateInstanceRunning, true);
         let isRegularInstanceRunning = await instances.isInstanceRunning(regularInstanceName);
-        assert(isRegularInstanceRunning, true);
+        assert.equal(isRegularInstanceRunning, true);
         let isBrokerInstanceRunning = await instances.isInstanceRunning(brokerInstanceName);
-        assert(isBrokerInstanceRunning, true);
+        assert.equal(isBrokerInstanceRunning, true);
       });
     });
 
@@ -86,16 +86,52 @@ describe('Basic tests', () => {
 
       it('should run all instances successfully', async function () {
         let isStateInstanceRunning = await instances.isInstanceRunning(stateInstanceName);
-        assert(isStateInstanceRunning, true);
+        assert.equal(isStateInstanceRunning, true);
         let isRegularInstance1Running = await instances.isInstanceRunning(regularInstanceName1);
-        assert(isRegularInstance1Running, true);
+        assert.equal(isRegularInstance1Running, true);
         let isBrokerInstance1Running = await instances.isInstanceRunning(brokerInstanceName1);
-        assert(isBrokerInstance1Running, true);
+        assert.equal(isBrokerInstance1Running, true);
         let isRegularInstance2Running = await instances.isInstanceRunning(regularInstanceName2);
-        assert(isRegularInstance2Running, true);
+        assert.equal(isRegularInstance2Running, true);
         let isBrokerInstance2Running = await instances.isInstanceRunning(brokerInstanceName2);
-        assert(isBrokerInstance2Running, true);
+        assert.equal(isBrokerInstance2Running, true);
       });
+    });
+  });
+
+  describe('Pub/sub channel sync', function () {
+    let instanceDetailList = [];
+    let subscriberNodeInstance;
+    let publisherNodeInstance;
+
+    beforeEach(async function () {
+      instanceDetailList = instances.generateSCCInstanceClusterDetailsList({
+        regularInstanceCount: 2,
+        brokerInstanceCount: 2,
+        stateInstanceStartPort: 7777,
+        regularInstanceStartPort: 8000,
+        brokerInstanceStartPort: 8888
+      });
+      await instances.launchSCCInstanceCluster(instanceDetailList, 2000);
+      subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
+        targetPort: 8000,
+        clientCount: 100,
+        uniqueChannelCount: 100,
+        channelsPerClient: 1
+      });
+      publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
+        targetPort: 8001,
+        clientCount: 10,
+        uniqueChannelCount: 100,
+        publishesPerClient: 10,
+        publishInterval: 100,
+        publishRandomness: 100
+      });
+      await instances.waitForTimeout(2500);
+    });
+
+    it('the number of messages received by subscribers should match the number of messages sent by publishers', function () {
+      assert.equal(subscriberNodeInstance.receivedMessages.length, publisherNodeInstance.sentMessages.length);
     });
   });
 });

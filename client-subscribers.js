@@ -1,7 +1,7 @@
 let socketClusterClient = require('socketcluster-client');
 let argv = require('minimist')(process.argv.slice(2));
 
-let options = JSON.parse(argv.options);
+let options = JSON.parse(argv.options || '{}');
 
 let clientOptions = {
   port: options.targetPort || 8000,
@@ -10,12 +10,12 @@ let clientOptions = {
 };
 
 let clientCount = options.clientCount || 1;
-let channelCount = options.channelCount || 100;
+let uniqueChannelCount = options.uniqueChannelCount || 100;
 let channelsPerClient = options.channelsPerClient || 1;
 
 let channelNames = [];
 
-for (let i = 0; i < channelCount; i++) {
+for (let i = 0; i < uniqueChannelCount; i++) {
   channelNames.push(`someChannel${i}`);
 }
 
@@ -24,22 +24,40 @@ let c = 0;
 
 for (let i = 0; i < clientCount; i++) {
   let socket = socketClusterClient.create(clientOptions);
+  socket.on('error', (err) => {
+    process.send({
+      type: 'error',
+      name: err.name,
+      message: err.message
+    });
+  });
   for (let j = 0; j < channelsPerClient; j++) {
-    let targetChannelName = channelNames[c % channelCount];
+    let targetChannelName = channelNames[c % uniqueChannelCount];
     let channel = socket.subscribe(targetChannelName);
     pendingSubscriptionPromises.push(
       new Promise((resolve) => {
         channel.once('subscribe', () => {
           resolve();
         });
-      });
+      })
     );
     channel.watch((data) => {
-      console.log('received:', data);
+      process.send({
+        type: 'received',
+        socketId: socket.id,
+        channel: channel.name,
+        data: data
+      });
     });
     c++;
   }
 }
 
-await Promise.all(pendingSubscriptionPromises);
-console.log('ready');
+async function waitForSubscribersToBeReady() {
+  await Promise.all(pendingSubscriptionPromises);
+  process.send({
+    type: 'ready'
+  });
+}
+
+waitForSubscribersToBeReady();
