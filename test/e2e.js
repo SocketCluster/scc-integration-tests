@@ -1,4 +1,5 @@
 let assert = require('assert');
+let path = require('path');
 let InstanceManager = require('../instance-manager');
 
 const config = {
@@ -16,7 +17,9 @@ const config = {
     imageName: 'socketcluster/scc-broker',
     versionTag: 'v1.6.3',
     internalContainerPort: 8888
-  }
+  },
+  subscriberInstancePath: path.join(__dirname, 'client-subscribers.js'),
+  publisherInstancePath: path.join(__dirname, 'client-publishers.js')
 };
 
 let instances = new InstanceManager(config);
@@ -37,9 +40,9 @@ describe('Basic tests', () => {
       let brokerInstanceName;
 
       beforeEach(async function () {
-        stateInstanceName = instances.generateRandomInstanceName('state');
-        regularInstanceName = instances.generateRandomInstanceName('regular');
-        brokerInstanceName = instances.generateRandomInstanceName('broker');
+        stateInstanceName = instances.generateRandomSCCInstanceName('state');
+        regularInstanceName = instances.generateRandomSCCInstanceName('regular');
+        brokerInstanceName = instances.generateRandomSCCInstanceName('broker');
 
         await Promise.all([
           instances.launchSCCInstance('state', 7777, stateInstanceName),
@@ -66,11 +69,11 @@ describe('Basic tests', () => {
       let brokerInstanceName2;
 
       beforeEach(async function () {
-        stateInstanceName = instances.generateRandomInstanceName('state');
-        regularInstanceName1 = instances.generateRandomInstanceName('regular');
-        brokerInstanceName1 = instances.generateRandomInstanceName('broker');
-        regularInstanceName2 = instances.generateRandomInstanceName('regular');
-        brokerInstanceName2 = instances.generateRandomInstanceName('broker');
+        stateInstanceName = instances.generateRandomSCCInstanceName('state');
+        regularInstanceName1 = instances.generateRandomSCCInstanceName('regular');
+        brokerInstanceName1 = instances.generateRandomSCCInstanceName('broker');
+        regularInstanceName2 = instances.generateRandomSCCInstanceName('regular');
+        brokerInstanceName2 = instances.generateRandomSCCInstanceName('broker');
 
         await Promise.all([
           instances.launchSCCInstance('state', 7777, stateInstanceName),

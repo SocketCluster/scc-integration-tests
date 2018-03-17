@@ -1,10 +1,12 @@
 let childProcess = require('child_process');
 let exec = childProcess.exec;
+let fork = childProcess.fork;
 let uuid = require('uuid');
 
 function InstanceManager(config) {
   this.config = config;
-  this.activeInstanceList = [];
+  this.activeDockerInstanceList = [];
+  this.activeNodeInstanceMap = {};
 }
 
 InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPort, instanceName) {
@@ -14,7 +16,7 @@ InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPo
       if (err) {
         reject(err);
       } else {
-        this.activeInstanceList.push(instanceName);
+        this.activeDockerInstanceList.push(instanceName);
         resolve();
       }
     });
@@ -27,7 +29,7 @@ InstanceManager.prototype.stopSCCInstance = function (instanceName) {
       if (err) {
         reject(err);
       } else {
-        this.activeInstanceList = this.activeInstanceList.filter((curInstanceName) => {
+        this.activeDockerInstanceList = this.activeDockerInstanceList.filter((curInstanceName) => {
           return curInstanceName !== instanceName;
         });
         resolve();
@@ -71,7 +73,7 @@ InstanceManager.prototype.destroySCCInstance = async function (instanceName) {
 };
 
 InstanceManager.prototype.destroyAllSCCInstances = function () {
-  let destroyInstanceListPromises = this.activeInstanceList.map((instanceName) => {
+  let destroyInstanceListPromises = this.activeDockerInstanceList.map((instanceName) => {
     return this.destroySCCInstance(instanceName);
   });
   return Promise.all(destroyInstanceListPromises);
@@ -98,8 +100,41 @@ InstanceManager.prototype.destroyAllDockerInstances = async function () {
   await this.removeAllDockerInstances();
 };
 
-InstanceManager.prototype.generateRandomInstanceName = function (instanceType) {
+InstanceManager.prototype.generateRandomSCCInstanceName = function (instanceType) {
   return `scc-${instanceType}-` + uuid.v4();
+};
+
+InstanceManager.prototype.launchSubscriberNodeInstance = function (instanceName, options) {
+  let optionsString = JSON.stringify(options || {});
+  let args = ['--options', optionsString];
+  return new Promise((resolve, reject) => {
+    this.activeNodeInstanceMap[instanceName] = fork(this.config.subscriberInstancePath, args, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+};
+
+InstanceManager.prototype.launchPublisherNodeInstance = function (instanceName, options) {
+  let optionsString = JSON.stringify(options || {});
+  let args = ['--options', optionsString];
+  return new Promise((resolve, reject) => {
+    this.activeNodeInstanceMap[instanceName] = fork(this.config.publisherInstancePath, args, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        this.activeNodeInstanceMap.push(instanceName);
+        resolve();
+      }
+    });
+  });
+};
+
+InstanceManager.prototype.destroyNodeInstance = function (instanceName) {
+  this.activeNodeInstanceMap[instanceName].kill();
 };
 
 module.exports = InstanceManager;
