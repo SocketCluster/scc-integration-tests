@@ -130,12 +130,13 @@ describe('Basic tests without instance failures', () => {
         publishInterval: 100,
         publishRandomness: 100
       });
-      await instances.waitForTimeout(3000);
+      await instances.waitForTimeout(10000);
     });
 
     it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
-      assert.equal(subscriberNodeInstance.receivedMessages.length, publisherNodeInstance.sentMessages.length);
       assert.equal(publisherNodeInstance.failedToSendMessages.length, 0);
+      assert.equal(subscriberNodeInstance.receivedMessages.length, publisherNodeInstance.sentMessages.length);
+      assert.equal(subscriberNodeInstance.receivedMessages.length, 100);
     });
   });
 });
