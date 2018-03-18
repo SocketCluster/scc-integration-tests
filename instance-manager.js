@@ -9,10 +9,17 @@ function InstanceManager(config) {
   this.activeNodeInstanceMap = {};
 }
 
-InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPort, instanceName) {
+InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPort, instanceName, stateServerHost) {
+  stateServerHost = stateServerHost || '127.0.0.1';
   let instanceTypeConfig = this.config[instanceType];
   return new Promise((resolve, reject) => {
-    exec(`docker run -d -p ${externalPort}:${instanceTypeConfig.internalContainerPort} --name ${instanceName} ${instanceTypeConfig.imageName}:${instanceTypeConfig.versionTag}`, (err) => {
+    let envFlag;
+    if (instanceType === 'state') {
+      envFlag = '';
+    } else {
+      envFlag = ` -e "SCC_STATE_SERVER_HOST=${stateServerHost}"`;
+    }
+    exec(`docker run -d -p ${externalPort}:${instanceTypeConfig.internalContainerPort}${envFlag} --name ${instanceName} ${instanceTypeConfig.imageName}:${instanceTypeConfig.versionTag}`, (err) => {
       if (err) {
         reject(err);
       } else {
@@ -100,6 +107,18 @@ InstanceManager.prototype.destroyAllDockerInstances = async function () {
   await this.removeAllDockerInstances();
 };
 
+InstanceManager.prototype.getDockerInstanceIP = function (instanceName) {
+  return new Promise((resolve, reject) => {
+    exec(`docker inspect -f "{{.NetworkSettings.IPAddress}}" ${instanceName}`, (err, stdout) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(stdout.split('\n')[0]);
+      }
+    });
+  });
+};
+
 InstanceManager.prototype.generateRandomSCCInstanceName = function (instanceType) {
   return `scc-${instanceType}-` + uuid.v4();
 };
@@ -142,8 +161,19 @@ InstanceManager.prototype.waitForTimeout = function (delay) {
 };
 
 InstanceManager.prototype.launchSCCInstanceCluster = async function (clusterDetailsList, readyDelay) {
-  let launchInstancePromises = clusterDetailsList.map((instanceDetails) => {
-    return this.launchSCCInstance(instanceDetails.type, instanceDetails.port, instanceDetails.name);
+  let stateInstanceDetails = clusterDetailsList.filter((instanceDetails) => {
+    return instanceDetails.type === 'state';
+  })[0];
+
+  await this.launchSCCInstance(stateInstanceDetails.type, stateInstanceDetails.port, stateInstanceDetails.name);
+  let stateInstanceIP = await this.getDockerInstanceIP(stateInstanceDetails.name);
+
+  let otherInstanceDetailsList = clusterDetailsList.filter((instanceDetails) => {
+    return instanceDetails.type !== 'state';
+  });
+
+  let launchInstancePromises = otherInstanceDetailsList.map((instanceDetails) => {
+    return this.launchSCCInstance(instanceDetails.type, instanceDetails.port, instanceDetails.name, stateInstanceIP);
   });
   await Promise.all(launchInstancePromises);
   await this.waitForTimeout(readyDelay || 1000);
