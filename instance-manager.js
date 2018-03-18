@@ -20,12 +20,12 @@ InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPo
       envFlag = ` -e "SCC_STATE_SERVER_HOST=${stateServerHost}"`;
     }
     console.log('Launching SCC instance:', `docker run -d -p ${externalPort}:${instanceTypeConfig.internalContainerPort}${envFlag} --name ${instanceName} ${instanceTypeConfig.imageName}:${instanceTypeConfig.versionTag}`);
-    exec(`docker run -d -p ${externalPort}:${instanceTypeConfig.internalContainerPort}${envFlag} --name ${instanceName} ${instanceTypeConfig.imageName}:${instanceTypeConfig.versionTag}`, (err) => {
+    let instanceProcess = exec(`docker run -d -p ${externalPort}:${instanceTypeConfig.internalContainerPort}${envFlag} --name ${instanceName} ${instanceTypeConfig.imageName}:${instanceTypeConfig.versionTag}`, (err) => {
       if (err) {
         reject(err);
       } else {
         this.activeDockerInstanceList.push(instanceName);
-        resolve();
+        resolve(instanceProcess);
       }
     });
   });
