@@ -178,6 +178,9 @@ InstanceManager.prototype.launchSCCInstanceCluster = async function (clusterDeta
   });
   await Promise.all(launchInstancePromises);
   await this.waitForTimeout(readyDelay || 1000);
+  return {
+    stateInstanceIP: stateInstanceIP
+  };
 };
 
 InstanceManager.prototype.launchSubscriberNodeInstance = function (instanceName, options) {

@@ -8,13 +8,13 @@ before(async function () {
   await instances.destroyAllDockerInstances();
 });
 
-describe('Advanced tests with instance failures', () => {
+describe('Stable network, pub/sub sync', () => {
   afterEach(async function () {
     await instances.destroyAllDockerInstances();
     await instances.destroyAllNodeInstances();
   });
 
-  describe('Pub/sub channel sync', function () {
+  describe('Pub/sub channels sync', function () {
     let instanceDetailList = [];
     let subscriberNodeInstance;
     let publisherNodeInstance;
