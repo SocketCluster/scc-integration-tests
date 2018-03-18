@@ -15,19 +15,19 @@ describe('Stable network, pub/sub sync while scaling out', () => {
   });
 
   describe('Pub/sub channels sync while adding new scc-broker instances at the same time', function () {
-    let instanceDetailList = [];
+    let instanceDetailsList = [];
     let subscriberNodeInstance;
     let publisherNodeInstance;
 
     beforeEach(async function () {
-      instanceDetailList = instances.generateSCCInstanceClusterDetailsList({
+      instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
         regularInstanceCount: 2,
         brokerInstanceCount: 1,
         stateInstanceStartPort: 7777,
         regularInstanceStartPort: 8000,
         brokerInstanceStartPort: 8888
       });
-      let clusterInfo = await instances.launchSCCInstanceCluster(instanceDetailList, 2000);
+      let clusterInfo = await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
       subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
         targetPort: 8000,
         clientCount: 100,
@@ -59,19 +59,19 @@ describe('Stable network, pub/sub sync while scaling out', () => {
   });
 
   describe('Pub/sub channels stay in sync while adding new regular SC instances at the same time', function () {
-    let instanceDetailList = [];
+    let instanceDetailsList = [];
     let subscriberNodeInstance;
     let publisherNodeInstance;
 
     beforeEach(async function () {
-      instanceDetailList = instances.generateSCCInstanceClusterDetailsList({
+      instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
         regularInstanceCount: 2,
         brokerInstanceCount: 1,
         stateInstanceStartPort: 7777,
         regularInstanceStartPort: 8000,
         brokerInstanceStartPort: 8888
       });
-      let clusterInfo = await instances.launchSCCInstanceCluster(instanceDetailList, 2000);
+      let clusterInfo = await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
       subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
         targetPort: 8000,
         clientCount: 100,
@@ -103,19 +103,19 @@ describe('Stable network, pub/sub sync while scaling out', () => {
   });
 
   describe('Pub/sub channels stay in sync while adding a new regular SC instance and an scc-broker instance at the same time', function () {
-    let instanceDetailList = [];
+    let instanceDetailsList = [];
     let subscriberNodeInstance;
     let publisherNodeInstance;
 
     beforeEach(async function () {
-      instanceDetailList = instances.generateSCCInstanceClusterDetailsList({
+      instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
         regularInstanceCount: 2,
         brokerInstanceCount: 1,
         stateInstanceStartPort: 7777,
         regularInstanceStartPort: 8000,
         brokerInstanceStartPort: 8888
       });
-      let clusterInfo = await instances.launchSCCInstanceCluster(instanceDetailList, 2000);
+      let clusterInfo = await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
       subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
         targetPort: 8000,
         clientCount: 100,
@@ -147,19 +147,19 @@ describe('Stable network, pub/sub sync while scaling out', () => {
   });
 
   describe('Pub/sub channels stay in sync while adding a new regular SC instance and then an scc-broker instance', function () {
-    let instanceDetailList = [];
+    let instanceDetailsList = [];
     let subscriberNodeInstance;
     let publisherNodeInstance;
 
     beforeEach(async function () {
-      instanceDetailList = instances.generateSCCInstanceClusterDetailsList({
+      instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
         regularInstanceCount: 2,
         brokerInstanceCount: 1,
         stateInstanceStartPort: 7777,
         regularInstanceStartPort: 8000,
         brokerInstanceStartPort: 8888
       });
-      let clusterInfo = await instances.launchSCCInstanceCluster(instanceDetailList, 2000);
+      let clusterInfo = await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
       subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
         targetPort: 8000,
         clientCount: 100,
@@ -189,19 +189,19 @@ describe('Stable network, pub/sub sync while scaling out', () => {
   });
 
   describe('Pub/sub channels stay in sync while adding a new scc-broker instance and then a regular SC instance', function () {
-    let instanceDetailList = [];
+    let instanceDetailsList = [];
     let subscriberNodeInstance;
     let publisherNodeInstance;
 
     beforeEach(async function () {
-      instanceDetailList = instances.generateSCCInstanceClusterDetailsList({
+      instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
         regularInstanceCount: 2,
         brokerInstanceCount: 1,
         stateInstanceStartPort: 7777,
         regularInstanceStartPort: 8000,
         brokerInstanceStartPort: 8888
       });
-      let clusterInfo = await instances.launchSCCInstanceCluster(instanceDetailList, 2000);
+      let clusterInfo = await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
       subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
         targetPort: 8000,
         clientCount: 100,

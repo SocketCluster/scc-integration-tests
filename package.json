@@ -4,7 +4,7 @@
   "description": "Integration tests for SCC",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --reporter spec --timeout 120000 --slow 120000"
+    "test": "node_modules/mocha/bin/mocha --reporter spec --timeout 120000 --slow 120000"
   },
   "repository": {
     "type": "git",

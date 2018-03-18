@@ -14,7 +14,7 @@ describe('Stable network, pub/sub sync', () => {
     await instances.destroyAllNodeInstances();
   });
 
-  describe('Pub/sub channels sync', function () {
+  describe('Pub/sub channels sync after multiple broker crashes', function () {
     let instanceDetailsList = [];
     let subscriberNodeInstance;
     let publisherNodeInstance;
@@ -22,7 +22,7 @@ describe('Stable network, pub/sub sync', () => {
     beforeEach(async function () {
       instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
         regularInstanceCount: 2,
-        brokerInstanceCount: 2,
+        brokerInstanceCount: 3,
         stateInstanceStartPort: 7777,
         regularInstanceStartPort: 8000,
         brokerInstanceStartPort: 8888
@@ -35,6 +35,13 @@ describe('Stable network, pub/sub sync', () => {
         channelsPerClient: 1
       });
       // Wait for subscriptions to sync across the cluster.
+      await instances.waitForTimeout(20000);
+      let brokerInstanceDetailsList = instanceDetailsList.filter((instanceDetails) => {
+        return instanceDetails.type === 'broker';
+      });
+      instances.stopSCCInstance(brokerInstanceDetailsList[0].name);
+      instances.stopSCCInstance(brokerInstanceDetailsList[1].name);
+      // Wait for cluster to sync.
       await instances.waitForTimeout(20000);
       publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
         targetPort: 8001,

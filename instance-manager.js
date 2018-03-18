@@ -33,6 +33,7 @@ InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPo
 
 InstanceManager.prototype.stopSCCInstance = function (instanceName) {
   return new Promise((resolve, reject) => {
+    console.log('Stopping SCC instance:', `docker stop -t 0 ${instanceName}`);
     exec(`docker stop -t 0 ${instanceName}`, (err) => {
       if (err) {
         reject(err);
