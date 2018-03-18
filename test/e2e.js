@@ -31,6 +31,7 @@ before(async function () {
 describe('Basic tests without instance failures', () => {
   afterEach(async function () {
     await instances.destroyAllDockerInstances();
+    await instances.destroyAllNodeInstances();
   });
 
   describe.skip('Instances launch successfully', function () {
@@ -119,6 +120,8 @@ describe('Basic tests without instance failures', () => {
         uniqueChannelCount: 100,
         channelsPerClient: 1
       });
+      // Wait for cluster to sync.
+      await instances.waitForTimeout(10000);
       publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
         targetPort: 8001,
         clientCount: 10,
@@ -127,7 +130,7 @@ describe('Basic tests without instance failures', () => {
         publishInterval: 100,
         publishRandomness: 100
       });
-      await instances.waitForTimeout(2500);
+      await instances.waitForTimeout(3000);
     });
 
     it('the number of messages received by subscribers should match the number of messages sent by publishers', function () {

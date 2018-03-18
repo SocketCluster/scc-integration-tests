@@ -19,6 +19,7 @@ InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPo
     } else {
       envFlag = ` -e "SCC_STATE_SERVER_HOST=${stateServerHost}"`;
     }
+    console.log('Launching SCC instance:', `docker run -d -p ${externalPort}:${instanceTypeConfig.internalContainerPort}${envFlag} --name ${instanceName} ${instanceTypeConfig.imageName}:${instanceTypeConfig.versionTag}`);
     exec(`docker run -d -p ${externalPort}:${instanceTypeConfig.internalContainerPort}${envFlag} --name ${instanceName} ${instanceTypeConfig.imageName}:${instanceTypeConfig.versionTag}`, (err) => {
       if (err) {
         reject(err);
@@ -232,6 +233,13 @@ InstanceManager.prototype.launchPublisherNodeInstance = function (instanceName, 
 
 InstanceManager.prototype.destroyNodeInstance = function (instanceName) {
   this.activeNodeInstanceMap[instanceName].kill();
+  delete this.activeNodeInstanceMap[instanceName];
+};
+
+InstanceManager.prototype.destroyAllNodeInstances = function (instanceName) {
+  Object.keys(this.activeNodeInstanceMap).forEach((instanceName) => {
+    this.destroyNodeInstance(instanceName);
+  });
 };
 
 module.exports = InstanceManager;
