@@ -121,7 +121,7 @@ describe('Basic tests without instance failures', () => {
         channelsPerClient: 1
       });
       // Wait for subscriptions to sync across the cluster.
-      await instances.waitForTimeout(10000);
+      await instances.waitForTimeout(20000);
       publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
         targetPort: 8001,
         clientCount: 10,
@@ -133,8 +133,9 @@ describe('Basic tests without instance failures', () => {
       await instances.waitForTimeout(3000);
     });
 
-    it('the number of messages received by subscribers should match the number of messages sent by publishers', function () {
+    it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
       assert.equal(subscriberNodeInstance.receivedMessages.length, publisherNodeInstance.sentMessages.length);
+      assert.equal(publisherNodeInstance.failedToSendMessages.length, 0);
     });
   });
 });
