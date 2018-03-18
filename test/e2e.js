@@ -120,7 +120,7 @@ describe('Basic tests without instance failures', () => {
         uniqueChannelCount: 100,
         channelsPerClient: 1
       });
-      // Wait for cluster to sync.
+      // Wait for subscriptions to sync across the cluster.
       await instances.waitForTimeout(10000);
       publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
         targetPort: 8001,
