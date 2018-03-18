@@ -18,7 +18,7 @@ let publishesPerClient = options.publishesPerClient || 10;
 let channelNames = [];
 
 for (let i = 0; i < uniqueChannelCount; i++) {
-  channelNames.push(`someChannel${i}`);
+  channelNames.push(`testChannel${i}`);
 }
 
 let c = 0;

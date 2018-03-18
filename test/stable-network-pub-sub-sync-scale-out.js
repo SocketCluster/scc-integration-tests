@@ -48,7 +48,7 @@ describe('Stable network, pub/sub sync while scaling out', () => {
         instances.launchSCCInstance('broker', 8890, instances.generateRandomSCCInstanceName('broker'), clusterInfo.stateInstanceIP),
         instances.launchSCCInstance('broker', 8891, instances.generateRandomSCCInstanceName('broker'), clusterInfo.stateInstanceIP)
       ]);
-      await instances.waitForTimeout(40000);
+      await instances.waitForTimeout(30000);
     });
 
     it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
@@ -92,7 +92,7 @@ describe('Stable network, pub/sub sync while scaling out', () => {
         instances.launchSCCInstance('regular', 8002, instances.generateRandomSCCInstanceName('broker'), clusterInfo.stateInstanceIP),
         instances.launchSCCInstance('regular', 8003, instances.generateRandomSCCInstanceName('broker'), clusterInfo.stateInstanceIP)
       ]);
-      await instances.waitForTimeout(40000);
+      await instances.waitForTimeout(30000);
     });
 
     it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
@@ -136,7 +136,7 @@ describe('Stable network, pub/sub sync while scaling out', () => {
         instances.launchSCCInstance('broker', 8889, instances.generateRandomSCCInstanceName('broker'), clusterInfo.stateInstanceIP),
         instances.launchSCCInstance('regular', 8002, instances.generateRandomSCCInstanceName('regular'), clusterInfo.stateInstanceIP)
       ]);
-      await instances.waitForTimeout(40000);
+      await instances.waitForTimeout(30000);
     });
 
     it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
@@ -173,12 +173,12 @@ describe('Stable network, pub/sub sync while scaling out', () => {
         clientCount: 10,
         uniqueChannelCount: 100,
         publishesPerClient: 20,
-        publishInterval: 1000,
+        publishInterval: 500,
         publishRandomness: 500
       });
       await instances.launchSCCInstance('regular', 8002, instances.generateRandomSCCInstanceName('regular'), clusterInfo.stateInstanceIP)
       await instances.launchSCCInstance('broker', 8889, instances.generateRandomSCCInstanceName('broker'), clusterInfo.stateInstanceIP),
-      await instances.waitForTimeout(40000);
+      await instances.waitForTimeout(30000);
     });
 
     it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
@@ -215,12 +215,12 @@ describe('Stable network, pub/sub sync while scaling out', () => {
         clientCount: 10,
         uniqueChannelCount: 100,
         publishesPerClient: 20,
-        publishInterval: 1000,
+        publishInterval: 500,
         publishRandomness: 500
       });
       await instances.launchSCCInstance('broker', 8889, instances.generateRandomSCCInstanceName('broker'), clusterInfo.stateInstanceIP),
       await instances.launchSCCInstance('regular', 8002, instances.generateRandomSCCInstanceName('regular'), clusterInfo.stateInstanceIP)
-      await instances.waitForTimeout(40000);
+      await instances.waitForTimeout(30000);
     });
 
     it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {

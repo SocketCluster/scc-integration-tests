@@ -2,25 +2,31 @@ let childProcess = require('child_process');
 let exec = childProcess.exec;
 let fork = childProcess.fork;
 let uuid = require('uuid');
+let path = require('path');
 
 function InstanceManager(config) {
   this.config = config;
   this.activeDockerInstanceList = [];
   this.activeNodeInstanceMap = {};
+  this.absoluteControllerPath = path.join(__dirname, 'controllers');
 }
 
 InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPort, instanceName, stateServerHost) {
   stateServerHost = stateServerHost || '127.0.0.1';
   let instanceTypeConfig = this.config[instanceType];
   return new Promise((resolve, reject) => {
-    let envFlag;
-    if (instanceType === 'state') {
-      envFlag = '';
-    } else {
+    let volumeFlag = '';
+    let envFlag = '';
+    if (instanceType !== 'state') {
       envFlag = ` -e "SCC_STATE_SERVER_HOST=${stateServerHost}"`;
+      if (instanceType === 'regular') {
+        envFlag += ` -e "SOCKETCLUSTER_WORKER_CONTROLLER=/usr/src/app/worker.js"`;
+        // envFlag += ` -e "SOCKETCLUSTER_BROKER_CONTROLLER=/usr/src/app/broker.js"`;
+        volumeFlag = ` -v ${this.absoluteControllerPath}:/usr/src/app/`;
+      }
     }
-    console.log('Launching SCC instance:', `docker run -d -p ${externalPort}:${instanceTypeConfig.internalContainerPort}${envFlag} --name ${instanceName} ${instanceTypeConfig.imageName}:${instanceTypeConfig.versionTag}`);
-    let instanceProcess = exec(`docker run -d -p ${externalPort}:${instanceTypeConfig.internalContainerPort}${envFlag} --name ${instanceName} ${instanceTypeConfig.imageName}:${instanceTypeConfig.versionTag}`, (err) => {
+    // console.log('Launching SCC instance:', `docker run -d -p ${externalPort}:${instanceTypeConfig.internalContainerPort}${volumeFlag}${envFlag} --name ${instanceName} ${instanceTypeConfig.imageName}:${instanceTypeConfig.versionTag}`);
+    let instanceProcess = exec(`docker run -d -p ${externalPort}:${instanceTypeConfig.internalContainerPort}${volumeFlag}${envFlag} --name ${instanceName} ${instanceTypeConfig.imageName}:${instanceTypeConfig.versionTag}`, (err) => {
       if (err) {
         reject(err);
       } else {
@@ -33,7 +39,7 @@ InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPo
 
 InstanceManager.prototype.stopSCCInstance = function (instanceName) {
   return new Promise((resolve, reject) => {
-    console.log('Stopping SCC instance:', `docker stop -t 0 ${instanceName}`);
+    // console.log('Stopping SCC instance:', `docker stop -t 0 ${instanceName}`);
     exec(`docker stop -t 0 ${instanceName}`, (err) => {
       if (err) {
         reject(err);

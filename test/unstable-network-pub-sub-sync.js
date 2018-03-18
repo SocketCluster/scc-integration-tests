@@ -8,7 +8,7 @@ before(async function () {
   await instances.destroyAllDockerInstances();
 });
 
-describe('Stable network, pub/sub sync', () => {
+describe('Unstable network, pub/sub sync', () => {
   afterEach(async function () {
     await instances.destroyAllDockerInstances();
     await instances.destroyAllNodeInstances();

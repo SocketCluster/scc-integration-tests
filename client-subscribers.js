@@ -16,7 +16,7 @@ let channelsPerClient = options.channelsPerClient || 1;
 let channelNames = [];
 
 for (let i = 0; i < uniqueChannelCount; i++) {
-  channelNames.push(`someChannel${i}`);
+  channelNames.push(`testChannel${i}`);
 }
 
 let pendingSubscriptionPromises = [];
@@ -32,7 +32,10 @@ for (let i = 0; i < clientCount; i++) {
     });
   });
   for (let j = 0; j < channelsPerClient; j++) {
-    let targetChannelName = channelNames[c % uniqueChannelCount];
+    let targetChannelName = channelNames[c++ % uniqueChannelCount];
+    if (socket.isSubscribed(targetChannelName, true)) {
+      continue;
+    }
     let channel = socket.subscribe(targetChannelName);
     pendingSubscriptionPromises.push(
       new Promise((resolve) => {
@@ -49,7 +52,6 @@ for (let i = 0; i < clientCount; i++) {
         data: data
       });
     });
-    c++;
   }
 }
 
