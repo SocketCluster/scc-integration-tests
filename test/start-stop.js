@@ -21,9 +21,9 @@ describe('Instances start and stop', () => {
       let brokerInstanceName;
 
       beforeEach(async function () {
-        stateInstanceName = instances.generateRandomSCCInstanceName('state');
-        regularInstanceName = instances.generateRandomSCCInstanceName('regular');
-        brokerInstanceName = instances.generateRandomSCCInstanceName('broker');
+        stateInstanceName = instances.generateSCCInstanceName('state');
+        regularInstanceName = instances.generateSCCInstanceName('regular');
+        brokerInstanceName = instances.generateSCCInstanceName('broker');
 
         await Promise.all([
           instances.launchSCCInstance('state', 7777, stateInstanceName),
@@ -50,11 +50,11 @@ describe('Instances start and stop', () => {
       let brokerInstanceName2;
 
       beforeEach(async function () {
-        stateInstanceName = instances.generateRandomSCCInstanceName('state');
-        regularInstanceName1 = instances.generateRandomSCCInstanceName('regular');
-        brokerInstanceName1 = instances.generateRandomSCCInstanceName('broker');
-        regularInstanceName2 = instances.generateRandomSCCInstanceName('regular');
-        brokerInstanceName2 = instances.generateRandomSCCInstanceName('broker');
+        stateInstanceName = instances.generateSCCInstanceName('state');
+        regularInstanceName1 = instances.generateSCCInstanceName('regular');
+        brokerInstanceName1 = instances.generateSCCInstanceName('broker');
+        regularInstanceName2 = instances.generateSCCInstanceName('regular');
+        brokerInstanceName2 = instances.generateSCCInstanceName('broker');
 
         await Promise.all([
           instances.launchSCCInstance('state', 7777, stateInstanceName),

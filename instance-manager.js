@@ -9,6 +9,7 @@ function InstanceManager(config) {
   this.activeDockerInstanceList = [];
   this.activeNodeInstanceMap = {};
   this.absoluteControllerPath = path.join(__dirname, 'controllers');
+  this.count = 0;
 }
 
 InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPort, instanceName, stateServerHost) {
@@ -128,8 +129,8 @@ InstanceManager.prototype.getDockerInstanceIP = function (instanceName) {
   });
 };
 
-InstanceManager.prototype.generateRandomSCCInstanceName = function (instanceType) {
-  return `scc-${instanceType}-` + uuid.v4();
+InstanceManager.prototype.generateSCCInstanceName = function (instanceType) {
+  return `scc-${instanceType}-` + this.count++;
 };
 
 InstanceManager.prototype.generateSCCInstanceClusterDetailsList = function (options) {
@@ -141,20 +142,20 @@ InstanceManager.prototype.generateSCCInstanceClusterDetailsList = function (opti
 
   instanceDetailList.push({
     type: 'state',
-    name: this.generateRandomSCCInstanceName('state'),
+    name: this.generateSCCInstanceName('state'),
     port: stateInstanceStartPort
   });
   for (let i = 0; i < options.regularInstanceCount; i++) {
     instanceDetailList.push({
       type: 'regular',
-      name: this.generateRandomSCCInstanceName('regular'),
+      name: this.generateSCCInstanceName('regular'),
       port: regularInstanceStartPort + i
     });
   }
   for (let i = 0; i < options.brokerInstanceCount; i++) {
     instanceDetailList.push({
       type: 'broker',
-      name: this.generateRandomSCCInstanceName('broker'),
+      name: this.generateSCCInstanceName('broker'),
       port: brokerInstanceStartPort + i
     });
   }
