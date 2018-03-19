@@ -20,8 +20,9 @@ InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPo
     if (instanceType !== 'state') {
       envFlag = ` -e "SCC_STATE_SERVER_HOST=${stateServerHost}"`;
       if (instanceType === 'regular') {
+        envFlag += ` -e "SOCKETCLUSTER_MASTER_CONTROLLER=/usr/src/app/server.js"`;
         envFlag += ` -e "SOCKETCLUSTER_WORKER_CONTROLLER=/usr/src/app/worker.js"`;
-        // envFlag += ` -e "SOCKETCLUSTER_BROKER_CONTROLLER=/usr/src/app/broker.js"`;
+        envFlag += ` -e "SOCKETCLUSTER_BROKER_CONTROLLER=/usr/src/app/broker.js"`;
         volumeFlag = ` -v ${this.absoluteControllerPath}:/usr/src/app/`;
       }
     }

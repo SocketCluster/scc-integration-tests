@@ -14,7 +14,7 @@ describe('Stable network, pub/sub sync while scaling out', () => {
     await instances.destroyAllNodeInstances();
   });
 
-  describe('Pub/sub channels sync while adding new scc-broker instances at the same time', function () {
+  describe('Pub/sub channels stay in sync while adding new scc-broker instances at the same time', function () {
     let instanceDetailsList = [];
     let subscriberNodeInstance;
     let publisherNodeInstance;
