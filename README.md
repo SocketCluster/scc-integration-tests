@@ -7,7 +7,7 @@ The goal of each test scenario is to spawn up a cluster and change its state whi
 To run the tests, you need to have Node.js and Docker installed - You should be able to run the `docker` command from your user account without sudo.
 Then:
 
-1. Git clone this repo
+1. `git clone` this repo
 2. `cd` into the newly created directory
 3. Run `npm install`
 4. Run `npm test`
