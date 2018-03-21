@@ -8,13 +8,13 @@ before(async function () {
   await instances.destroyAllDockerInstances();
 });
 
-describe('Stable network, pub/sub sync while scaling out', () => {
+describe('Stable network, pub/sub sync after scaling out', () => {
   afterEach(async function () {
     await instances.destroyAllDockerInstances();
     await instances.destroyAllNodeInstances();
   });
 
-  describe('Pub/sub channels stay in sync while adding new scc-broker instances at the same time', function () {
+  describe('Pub/sub channels stay in sync after adding new scc-broker instances', function () {
     let instanceDetailsList = [];
     let subscriberNodeInstance;
     let publisherNodeInstance;
@@ -34,21 +34,21 @@ describe('Stable network, pub/sub sync while scaling out', () => {
         uniqueChannelCount: 100,
         channelsPerClient: 1
       });
-      // Wait for subscriptions to sync across the cluster.
-      await instances.waitForTimeout(10000);
+      await instances.waitForTimeout(2000);
+      await Promise.all([
+        instances.launchSCCInstance('broker', 8890, instances.generateSCCInstanceName('broker'), clusterInfo.stateInstanceIP),
+        instances.launchSCCInstance('broker', 8891, instances.generateSCCInstanceName('broker'), clusterInfo.stateInstanceIP)
+      ]);
+      await instances.waitForTimeout(6000);
       publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
         targetPort: 8001,
         clientCount: 10,
         uniqueChannelCount: 100,
         publishesPerClient: 20,
-        publishInterval: 500,
-        publishRandomness: 500
+        publishInterval: 100,
+        publishRandomness: 100
       });
-      await Promise.all([
-        instances.launchSCCInstance('broker', 8890, instances.generateSCCInstanceName('broker'), clusterInfo.stateInstanceIP),
-        instances.launchSCCInstance('broker', 8891, instances.generateSCCInstanceName('broker'), clusterInfo.stateInstanceIP)
-      ]);
-      await instances.waitForTimeout(30000);
+      await instances.waitForTimeout(5000);
     });
 
     it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
@@ -58,7 +58,7 @@ describe('Stable network, pub/sub sync while scaling out', () => {
     });
   });
 
-  describe.skip('Pub/sub channels stay in sync while adding new regular SC instances at the same time', function () {
+  describe('Pub/sub channels stay in sync after adding new regular SC instances', function () {
     let instanceDetailsList = [];
     let subscriberNodeInstance;
     let publisherNodeInstance;
@@ -78,21 +78,20 @@ describe('Stable network, pub/sub sync while scaling out', () => {
         uniqueChannelCount: 100,
         channelsPerClient: 1
       });
-      // Wait for subscriptions to sync across the cluster.
-      await instances.waitForTimeout(20000);
+      await instances.waitForTimeout(4000);
       publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
         targetPort: 8001,
         clientCount: 10,
         uniqueChannelCount: 100,
         publishesPerClient: 20,
-        publishInterval: 500,
-        publishRandomness: 500
+        publishInterval: 100,
+        publishRandomness: 100
       });
       await Promise.all([
         instances.launchSCCInstance('regular', 8002, instances.generateSCCInstanceName('broker'), clusterInfo.stateInstanceIP),
         instances.launchSCCInstance('regular', 8003, instances.generateSCCInstanceName('broker'), clusterInfo.stateInstanceIP)
       ]);
-      await instances.waitForTimeout(30000);
+      await instances.waitForTimeout(5000);
     });
 
     it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
@@ -102,7 +101,7 @@ describe('Stable network, pub/sub sync while scaling out', () => {
     });
   });
 
-  describe.skip('Pub/sub channels stay in sync while adding a new regular SC instance and an scc-broker instance at the same time', function () {
+  describe('Pub/sub channels stay in sync after adding a new regular SC instance and an scc-broker instance', function () {
     let instanceDetailsList = [];
     let subscriberNodeInstance;
     let publisherNodeInstance;
@@ -122,21 +121,20 @@ describe('Stable network, pub/sub sync while scaling out', () => {
         uniqueChannelCount: 100,
         channelsPerClient: 1
       });
-      // Wait for subscriptions to sync across the cluster.
-      await instances.waitForTimeout(20000);
+      await instances.waitForTimeout(4000);
       publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
         targetPort: 8001,
         clientCount: 10,
         uniqueChannelCount: 100,
         publishesPerClient: 20,
-        publishInterval: 500,
-        publishRandomness: 500
+        publishInterval: 100,
+        publishRandomness: 100
       });
       await Promise.all([
         instances.launchSCCInstance('broker', 8889, instances.generateSCCInstanceName('broker'), clusterInfo.stateInstanceIP),
         instances.launchSCCInstance('regular', 8002, instances.generateSCCInstanceName('regular'), clusterInfo.stateInstanceIP)
       ]);
-      await instances.waitForTimeout(30000);
+      await instances.waitForTimeout(5000);
     });
 
     it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
@@ -146,7 +144,7 @@ describe('Stable network, pub/sub sync while scaling out', () => {
     });
   });
 
-  describe.skip('Pub/sub channels stay in sync while adding a new regular SC instance and then an scc-broker instance', function () {
+  describe('Pub/sub channels stay in sync after adding a new regular SC instance and then an scc-broker instance', function () {
     let instanceDetailsList = [];
     let subscriberNodeInstance;
     let publisherNodeInstance;
@@ -166,19 +164,18 @@ describe('Stable network, pub/sub sync while scaling out', () => {
         uniqueChannelCount: 100,
         channelsPerClient: 1
       });
-      // Wait for subscriptions to sync across the cluster.
-      await instances.waitForTimeout(20000);
+      await instances.waitForTimeout(4000);
       publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
         targetPort: 8001,
         clientCount: 10,
         uniqueChannelCount: 100,
         publishesPerClient: 20,
-        publishInterval: 500,
-        publishRandomness: 500
+        publishInterval: 100,
+        publishRandomness: 100
       });
       await instances.launchSCCInstance('regular', 8002, instances.generateSCCInstanceName('regular'), clusterInfo.stateInstanceIP)
       await instances.launchSCCInstance('broker', 8889, instances.generateSCCInstanceName('broker'), clusterInfo.stateInstanceIP),
-      await instances.waitForTimeout(30000);
+      await instances.waitForTimeout(5000);
     });
 
     it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
@@ -188,7 +185,7 @@ describe('Stable network, pub/sub sync while scaling out', () => {
     });
   });
 
-  describe.skip('Pub/sub channels stay in sync while adding a new scc-broker instance and then a regular SC instance', function () {
+  describe('Pub/sub channels stay in sync after adding a new scc-broker instance and then a regular SC instance', function () {
     let instanceDetailsList = [];
     let subscriberNodeInstance;
     let publisherNodeInstance;
@@ -208,19 +205,18 @@ describe('Stable network, pub/sub sync while scaling out', () => {
         uniqueChannelCount: 100,
         channelsPerClient: 1
       });
-      // Wait for subscriptions to sync across the cluster.
-      await instances.waitForTimeout(20000);
+      await instances.waitForTimeout(4000);
       publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
         targetPort: 8001,
         clientCount: 10,
         uniqueChannelCount: 100,
         publishesPerClient: 20,
-        publishInterval: 500,
-        publishRandomness: 500
+        publishInterval: 100,
+        publishRandomness: 100
       });
       await instances.launchSCCInstance('broker', 8889, instances.generateSCCInstanceName('broker'), clusterInfo.stateInstanceIP),
       await instances.launchSCCInstance('regular', 8002, instances.generateSCCInstanceName('regular'), clusterInfo.stateInstanceIP)
-      await instances.waitForTimeout(30000);
+      await instances.waitForTimeout(5000);
     });
 
     it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {

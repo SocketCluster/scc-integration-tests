@@ -186,7 +186,9 @@ InstanceManager.prototype.launchSCCInstanceCluster = async function (clusterDeta
     return this.launchSCCInstance(instanceDetails.type, instanceDetails.port, instanceDetails.name, stateInstanceIP);
   });
   await Promise.all(launchInstancePromises);
-  await this.waitForTimeout(readyDelay || 1000);
+  if (readyDelay) {
+    await this.waitForTimeout(readyDelay);
+  }
   return {
     stateInstanceIP: stateInstanceIP
   };

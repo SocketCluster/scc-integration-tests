@@ -34,8 +34,7 @@ describe('Stable network, pub/sub sync', () => {
         uniqueChannelCount: 100,
         channelsPerClient: 1
       });
-      // Wait for subscriptions to sync across the cluster.
-      await instances.waitForTimeout(20000);
+      await instances.waitForTimeout(5000);
       publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
         targetPort: 8001,
         clientCount: 10,
@@ -44,7 +43,7 @@ describe('Stable network, pub/sub sync', () => {
         publishInterval: 100,
         publishRandomness: 100
       });
-      await instances.waitForTimeout(10000);
+      await instances.waitForTimeout(3000);
     });
 
     it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
