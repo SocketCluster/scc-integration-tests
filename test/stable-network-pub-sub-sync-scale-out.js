@@ -34,7 +34,7 @@ describe('Stable network, pub/sub sync after scaling out', () => {
         uniqueChannelCount: 100,
         channelsPerClient: 1
       });
-      await instances.waitForTimeout(2000);
+      await instances.waitForTimeout(3000);
       await Promise.all([
         instances.launchSCCInstance('broker', 8890, instances.generateSCCInstanceName('broker'), clusterInfo.stateInstanceIP),
         instances.launchSCCInstance('broker', 8891, instances.generateSCCInstanceName('broker'), clusterInfo.stateInstanceIP)
