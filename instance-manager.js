@@ -12,7 +12,7 @@ function InstanceManager(config) {
   this.count = 0;
 }
 
-InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPort, instanceName, stateServerHost) {
+InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPort, instanceName, stateServerHost, customEnvs) {
   stateServerHost = stateServerHost || '127.0.0.1';
   let instanceTypeConfig = this.config[instanceType];
   return new Promise((resolve, reject) => {
@@ -26,6 +26,11 @@ InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPo
         envFlag += ` -e "SOCKETCLUSTER_BROKER_CONTROLLER=/usr/src/app/broker.js"`;
         volumeFlag = ` -v ${this.absoluteControllerPath}:/usr/src/app/`;
       }
+    }
+    if (customEnvs) {
+      Object.keys(customEnvs).forEach((key) => {
+        envFlag += ` -e "${key}=${customEnvs[key]}"`;
+      });
     }
     // console.log('Launching SCC instance:', `docker run -d -p ${externalPort}:${instanceTypeConfig.internalContainerPort}${volumeFlag}${envFlag} --name ${instanceName} ${instanceTypeConfig.imageName}:${instanceTypeConfig.versionTag}`);
     let instanceProcess = exec(`docker run -d -p ${externalPort}:${instanceTypeConfig.internalContainerPort}${volumeFlag}${envFlag} --name ${instanceName} ${instanceTypeConfig.imageName}:${instanceTypeConfig.versionTag}`, (err) => {
@@ -140,23 +145,30 @@ InstanceManager.prototype.generateSCCInstanceClusterDetailsList = function (opti
   let regularInstanceStartPort = options.regularInstanceStartPort || 8000;
   let brokerInstanceStartPort = options.brokerInstanceStartPort || 8888;
 
+  let stateInstanceEnvs = options.stateInstanceEnvs || null;
+  let regularInstanceEnvs = options.regularInstanceEnvs || null;
+  let brokerInstanceEnvs = options.brokerInstanceEnvs || null;
+
   instanceDetailList.push({
     type: 'state',
     name: this.generateSCCInstanceName('state'),
-    port: stateInstanceStartPort
+    port: stateInstanceStartPort,
+    envs: stateInstanceEnvs
   });
   for (let i = 0; i < options.regularInstanceCount; i++) {
     instanceDetailList.push({
       type: 'regular',
       name: this.generateSCCInstanceName('regular'),
-      port: regularInstanceStartPort + i
+      port: regularInstanceStartPort + i,
+      envs: regularInstanceEnvs
     });
   }
   for (let i = 0; i < options.brokerInstanceCount; i++) {
     instanceDetailList.push({
       type: 'broker',
       name: this.generateSCCInstanceName('broker'),
-      port: brokerInstanceStartPort + i
+      port: brokerInstanceStartPort + i,
+      envs: brokerInstanceEnvs
     });
   }
   return instanceDetailList;
@@ -175,7 +187,7 @@ InstanceManager.prototype.launchSCCInstanceCluster = async function (clusterDeta
     return instanceDetails.type === 'state';
   })[0];
 
-  await this.launchSCCInstance(stateInstanceDetails.type, stateInstanceDetails.port, stateInstanceDetails.name);
+  await this.launchSCCInstance(stateInstanceDetails.type, stateInstanceDetails.port, stateInstanceDetails.name, null, stateInstanceDetails.envs);
   let stateInstanceIP = await this.getDockerInstanceIP(stateInstanceDetails.name);
 
   let otherInstanceDetailsList = clusterDetailsList.filter((instanceDetails) => {
@@ -183,7 +195,7 @@ InstanceManager.prototype.launchSCCInstanceCluster = async function (clusterDeta
   });
 
   let launchInstancePromises = otherInstanceDetailsList.map((instanceDetails) => {
-    return this.launchSCCInstance(instanceDetails.type, instanceDetails.port, instanceDetails.name, stateInstanceIP);
+    return this.launchSCCInstance(instanceDetails.type, instanceDetails.port, instanceDetails.name, stateInstanceIP, stateInstanceDetails.envs);
   });
   await Promise.all(launchInstancePromises);
   if (readyDelay) {
