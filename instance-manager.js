@@ -12,6 +12,10 @@ function InstanceManager(config) {
   this.count = 0;
 }
 
+InstanceManager.prototype.reset = function () {
+  this.count = 0;
+};
+
 InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPort, instanceName, stateServerHost, customEnvs) {
   stateServerHost = stateServerHost || '127.0.0.1';
   let instanceTypeConfig = this.config[instanceType];
@@ -195,7 +199,7 @@ InstanceManager.prototype.launchSCCInstanceCluster = async function (clusterDeta
   });
 
   let launchInstancePromises = otherInstanceDetailsList.map((instanceDetails) => {
-    return this.launchSCCInstance(instanceDetails.type, instanceDetails.port, instanceDetails.name, stateInstanceIP, stateInstanceDetails.envs);
+    return this.launchSCCInstance(instanceDetails.type, instanceDetails.port, instanceDetails.name, stateInstanceIP, instanceDetails.envs);
   });
   await Promise.all(launchInstancePromises);
   if (readyDelay) {

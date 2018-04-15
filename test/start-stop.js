@@ -12,6 +12,7 @@ describe('Instances start and stop', () => {
   afterEach(async function () {
     await instances.destroyAllDockerInstances();
     await instances.destroyAllNodeInstances();
+    instances.reset();
   });
 
   describe('Instances launch successfully', function () {

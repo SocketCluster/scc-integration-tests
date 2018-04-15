@@ -1,5 +1,7 @@
 let assert = require('assert');
+let util = require('util');
 let InstanceManager = require('../instance-manager');
+let StatsCollector = require('../stats-collector');
 let config = require('../config');
 
 let instances = new InstanceManager(config);
@@ -12,6 +14,7 @@ describe('Stable network, pub/sub sync', () => {
   afterEach(async function () {
     await instances.destroyAllDockerInstances();
     await instances.destroyAllNodeInstances();
+    instances.reset();
   });
 
   describe('Pub/sub channels sync', function () {
@@ -50,6 +53,223 @@ describe('Stable network, pub/sub sync', () => {
       assert.equal(publisherNodeInstance.failedToSendMessages.length, 0);
       assert.equal(subscriberNodeInstance.receivedMessages.length, publisherNodeInstance.sentMessages.length);
       assert.equal(subscriberNodeInstance.receivedMessages.length, 100);
+    });
+  });
+
+  describe('Pub/sub message distribution with simple hashing', function () {
+    let instanceDetailsList = [];
+    let subscriberNodeInstance;
+    let publisherNodeInstance;
+    let stats;
+
+    beforeEach(async function () {
+      instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
+        regularInstanceCount: 2,
+        brokerInstanceCount: 4,
+        stateInstanceStartPort: 7777,
+        brokerInstanceStartPort: 8888,
+        regularInstanceStartPort: 8000,
+        regularInstanceEnvs: {
+          SCC_CLIENT_POOL_SIZE: 3,
+          SCC_MAPPING_ENGINE: 'simple'
+        }
+      });
+      await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
+      subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
+        targetPort: 8000,
+        clientCount: 1000,
+        uniqueChannelCount: 1000,
+        channelsPerClient: 1
+      });
+      await instances.waitForTimeout(5000);
+      publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
+        targetPort: 8001,
+        clientCount: 100,
+        uniqueChannelCount: 1000,
+        publishesPerClient: 10,
+        publishInterval: 100,
+        publishRandomness: 100
+      });
+      await instances.waitForTimeout(3000);
+
+      let statsCollector = new StatsCollector(instanceDetailsList);
+      stats = await statsCollector.collectStats();
+      statsCollector.destroy();
+    });
+
+    it('messages are evenly spread across scc-broker instances and also within client pools', function () {
+      // console.log('      ' + util.inspect(stats, {depth: null, colors: true}));
+      let subscriberRegularInstanceStats = stats['scc-regular-1'];
+
+      Object.keys(subscriberRegularInstanceStats).forEach((sccBrokerURI) => {
+        let sccBrokerStats = subscriberRegularInstanceStats[sccBrokerURI];
+        let sccBrokerSubscribeSum = 0;
+        Object.keys(sccBrokerStats).forEach((poolIndex) => {
+          let poolClientStats = sccBrokerStats[poolIndex];
+
+          let subscribes = poolClientStats.subscribe;
+          let subscribeFails = poolClientStats.subscribeFail;
+          let publishes = poolClientStats.publish;
+          let publishFails = poolClientStats.publishFail;
+
+          assert.equal(subscribeFails === 0, true);
+
+          // Since no publishers were connected to this regular instance, we don't
+          // expect any inbound publishes on this instance.
+          assert.equal(publishes === 0, true);
+          assert.equal(publishFails === 0, true);
+
+          // Check that the distribution of subscriptions is even between connections in each pool.
+          assert.equal(subscribes > 60, true);
+          assert.equal(subscribes < 110, true);
+          sccBrokerSubscribeSum += subscribes;
+        });
+
+        // Check that the distribution of subscriptions is even between scc-broker instances.
+        assert.equal(sccBrokerSubscribeSum > 220, true);
+        assert.equal(sccBrokerSubscribeSum < 280, true);
+      });
+
+      let publisherRegularInstanceStats = stats['scc-regular-2'];
+
+      Object.keys(publisherRegularInstanceStats).forEach((sccBrokerURI) => {
+        let sccBrokerStats = publisherRegularInstanceStats[sccBrokerURI];
+        let sccBrokerPublishSum = 0;
+        Object.keys(sccBrokerStats).forEach((poolIndex) => {
+          let poolClientStats = sccBrokerStats[poolIndex];
+
+          let subscribes = poolClientStats.subscribe;
+          let subscribeFails = poolClientStats.subscribeFail;
+          let publishes = poolClientStats.publish;
+          let publishFails = poolClientStats.publishFail;
+
+          assert.equal(publishFails === 0, true);
+
+          // Since no subscribers were connected to this regular instance, we don't
+          // expect any inbound subscribes on this instance.
+          assert.equal(subscribes === 0, true);
+          assert.equal(subscribeFails === 0, true);
+
+          // Check that the distribution of publishes is even between connections in each pool.
+          assert.equal(publishes > 60, true);
+          assert.equal(publishes < 110, true);
+          sccBrokerPublishSum += publishes;
+        });
+
+        // Check that the distribution of publishes is even between scc-broker instances.
+        assert.equal(sccBrokerPublishSum > 220, true);
+        assert.equal(sccBrokerPublishSum < 280, true);
+      });
+    });
+  });
+
+  // This rendezvous hashing test is deterministic with respect to instance URIs.
+  // In practice, because Docker container URIs may be different each time they are launched,
+  // the exact values reported by this test may not be consistent each time it is run.
+  describe('Pub/sub message distribution with skeleton-based rendezvous (HRW) hashing', function () {
+    let instanceDetailsList = [];
+    let subscriberNodeInstance;
+    let publisherNodeInstance;
+    let stats;
+
+    beforeEach(async function () {
+      instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
+        regularInstanceCount: 2,
+        brokerInstanceCount: 4,
+        stateInstanceStartPort: 7777,
+        brokerInstanceStartPort: 8888,
+        regularInstanceStartPort: 8000,
+        regularInstanceEnvs: {
+          SCC_CLIENT_POOL_SIZE: 3,
+          SCC_MAPPING_ENGINE: 'skeletonRendezvous'
+        }
+      });
+      await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
+      subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
+        targetPort: 8000,
+        clientCount: 1000,
+        uniqueChannelCount: 1000,
+        channelsPerClient: 1
+      });
+      await instances.waitForTimeout(5000);
+      publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
+        targetPort: 8001,
+        clientCount: 100,
+        uniqueChannelCount: 1000,
+        publishesPerClient: 10,
+        publishInterval: 100,
+        publishRandomness: 100
+      });
+      await instances.waitForTimeout(3000);
+
+      let statsCollector = new StatsCollector(instanceDetailsList);
+      stats = await statsCollector.collectStats();
+      statsCollector.destroy();
+    });
+
+    it('messages are evenly spread across scc-broker instances and also within client pools', function () {
+      // console.log('      ' + util.inspect(stats, {depth: null, colors: true}));
+      let subscriberRegularInstanceStats = stats['scc-regular-1'];
+
+      Object.keys(subscriberRegularInstanceStats).forEach((sccBrokerURI) => {
+        let sccBrokerStats = subscriberRegularInstanceStats[sccBrokerURI];
+        let sccBrokerSubscribeSum = 0;
+        Object.keys(sccBrokerStats).forEach((poolIndex) => {
+          let poolClientStats = sccBrokerStats[poolIndex];
+
+          let subscribes = poolClientStats.subscribe;
+          let subscribeFails = poolClientStats.subscribeFail;
+          let publishes = poolClientStats.publish;
+          let publishFails = poolClientStats.publishFail;
+
+          assert.equal(subscribeFails === 0, true);
+
+          // Since no publishers were connected to this regular instance, we don't
+          // expect any inbound publishes on this instance.
+          assert.equal(publishes === 0, true);
+          assert.equal(publishFails === 0, true);
+
+          // Check that the distribution of subscriptions is even between connections in each pool.
+          assert.equal(subscribes > 60, true);
+          assert.equal(subscribes < 110, true);
+          sccBrokerSubscribeSum += subscribes;
+        });
+
+        // Check that the distribution of subscriptions is even between scc-broker instances.
+        assert.equal(sccBrokerSubscribeSum > 220, true);
+        assert.equal(sccBrokerSubscribeSum < 280, true);
+      });
+
+      let publisherRegularInstanceStats = stats['scc-regular-2'];
+
+      Object.keys(publisherRegularInstanceStats).forEach((sccBrokerURI) => {
+        let sccBrokerStats = publisherRegularInstanceStats[sccBrokerURI];
+        let sccBrokerPublishSum = 0;
+        Object.keys(sccBrokerStats).forEach((poolIndex) => {
+          let poolClientStats = sccBrokerStats[poolIndex];
+
+          let subscribes = poolClientStats.subscribe;
+          let subscribeFails = poolClientStats.subscribeFail;
+          let publishes = poolClientStats.publish;
+          let publishFails = poolClientStats.publishFail;
+
+          assert.equal(publishFails === 0, true);
+
+          // Since no subscribers were connected to this regular instance, we don't
+          // expect any inbound subscribes on this instance.
+          assert.equal(subscribes === 0, true);
+          assert.equal(subscribeFails === 0, true);
+
+          // Check that the distribution of publishes is even between connections in each pool.
+          assert.equal(publishes > 60, true);
+          assert.equal(publishes < 110, true);
+          sccBrokerPublishSum += publishes;
+        });
+
+        // Check that the distribution of publishes is even between scc-broker instances.
+        assert.equal(sccBrokerPublishSum > 220, true);
+        assert.equal(sccBrokerPublishSum < 280, true);
+      });
     });
   });
 });

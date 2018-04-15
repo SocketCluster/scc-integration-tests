@@ -12,6 +12,7 @@ describe('Stable network, pub/sub sync after scaling out', () => {
   afterEach(async function () {
     await instances.destroyAllDockerInstances();
     await instances.destroyAllNodeInstances();
+    instances.reset();
   });
 
   describe('Pub/sub channels stay in sync after adding new scc-broker instances', function () {

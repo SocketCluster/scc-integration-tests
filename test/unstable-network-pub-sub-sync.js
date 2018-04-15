@@ -12,6 +12,7 @@ describe('Unstable network, pub/sub sync', () => {
   afterEach(async function () {
     await instances.destroyAllDockerInstances();
     await instances.destroyAllNodeInstances();
+    instances.reset();
   });
 
   describe('Pub/sub channels sync after multiple broker crashes', function () {
