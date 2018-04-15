@@ -7,6 +7,8 @@ var healthChecker = require('sc-framework-health-check');
 
 class Worker extends SCWorker {
   run() {
+    var self = this;
+
     console.log('   >> Worker PID:', process.pid);
     var environment = this.options.environment;
 
@@ -48,6 +50,18 @@ class Worker extends SCWorker {
           rand: Math.floor(Math.random() * 5)
         });
       }, 1000);
+
+      // ---- Start stats collection ----
+
+      socket.on('getStats', function (data, respond) {
+        self.sendToMaster({
+          action: 'getStats'
+        }, function (err, data) {
+          respond(err, data);
+        });
+      });
+
+      // ---- End stats collection ----
 
       socket.on('disconnect', function () {
         clearInterval(interval);

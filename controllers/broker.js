@@ -12,14 +12,45 @@ class Broker extends SCBroker {
     // The clustering/sharding all happens automatically.
 
     if (this.options.clusterStateServerHost) {
-      scClusterBrokerClient.attach(this, {
+      var sccBrokerClient = scClusterBrokerClient.attach(this, {
         stateServerHost: this.options.clusterStateServerHost,
         stateServerPort: this.options.clusterStateServerPort,
+        clientPoolSize: this.options.clusterClientPoolSize,
+        mappingEngine: this.options.clusterMappingEngine,
         authKey: this.options.clusterAuthKey,
         stateServerConnectTimeout: this.options.clusterStateServerConnectTimeout,
         stateServerAckTimeout: this.options.clusterStateServerAckTimeout,
         stateServerReconnectRandomness: this.options.clusterStateServerReconnectRandomness
       });
+
+      // ---- Start stats collection ----
+
+      sccBrokerClient.on('subscribe', (data) => {
+        this.sendToMaster({
+          event: 'subscribe',
+          data: data
+        });
+      });
+      sccBrokerClient.on('subscribeFail', (data) => {
+        this.sendToMaster({
+          event: 'subscribeFail',
+          data: data
+        });
+      });
+      sccBrokerClient.on('publish', (data) => {
+        this.sendToMaster({
+          event: 'publish',
+          data: data
+        });
+      });
+      sccBrokerClient.on('publishFail', (data) => {
+        this.sendToMaster({
+          event: 'publishFail',
+          data: data
+        });
+      });
+
+      // ---- End stats collection ----
     }
   }
 }

@@ -25,8 +25,7 @@ var options = {
   workers: Number(argv.w) || Number(process.env.SOCKETCLUSTER_WORKERS) || 1,
   brokers: Number(argv.b) || Number(process.env.SOCKETCLUSTER_BROKERS) || 1,
   port: Number(argv.p) || Number(process.env.SOCKETCLUSTER_PORT) || 8000,
-  // If your system doesn't support 'uws', you can switch to 'ws' (which is slower but works on older systems).
-  wsEngine: process.env.SOCKETCLUSTER_WS_ENGINE || 'uws',
+  wsEngine: process.env.SOCKETCLUSTER_WS_ENGINE || 'ws',
   appName: argv.n || process.env.SOCKETCLUSTER_APP_NAME || null,
   workerController: workerControllerPath || path.join(__dirname, 'worker.js'),
   brokerController: brokerControllerPath || path.join(__dirname, 'broker.js'),
@@ -34,6 +33,8 @@ var options = {
   socketChannelLimit: Number(process.env.SOCKETCLUSTER_SOCKET_CHANNEL_LIMIT) || 1000,
   clusterStateServerHost: argv.cssh || process.env.SCC_STATE_SERVER_HOST || null,
   clusterStateServerPort: process.env.SCC_STATE_SERVER_PORT || null,
+  clusterClientPoolSize: process.env.SCC_CLIENT_POOL_SIZE || null,
+  clusterMappingEngine: process.env.SCC_MAPPING_ENGINE || null,
   clusterAuthKey: process.env.SCC_AUTH_KEY || null,
   clusterInstanceIp: process.env.SCC_INSTANCE_IP || null,
   clusterInstanceIpFamily: process.env.SCC_INSTANCE_IP_FAMILY || null,
@@ -61,6 +62,43 @@ for (var i in SOCKETCLUSTER_OPTIONS) {
 
 var start = function () {
   var socketCluster = new SocketCluster(options);
+
+  // ---- Start stats collection ----
+
+  var stats = {};
+
+  socketCluster.on('brokerMessage', function (brokerId, eventObject) {
+    var event = eventObject.event;
+    var data = eventObject.data;
+
+    if (!stats[data.targetURI]) {
+      stats[data.targetURI] = {};
+    }
+    if (!stats[data.targetURI][data.poolIndex]) {
+      stats[data.targetURI][data.poolIndex] = {
+        subscribe: 0,
+        subscribeFail: 0,
+        publish: 0,
+        publishFail: 0
+      };
+    }
+    var poolIndexStats = stats[data.targetURI][data.poolIndex];
+    poolIndexStats[event]++;
+  });
+
+  socketCluster.on('workerMessage', (workerId, eventObject, respond) => {
+    if (eventObject) {
+      if (eventObject.action === 'getStats') {
+        respond(null, stats);
+      } else {
+        respond(new Error("Unrecognized action '" + eventObject.action + "'"));
+      }
+    } else {
+      respond(new Error('The action property was not specified'));
+    }
+  });
+
+  // ---- End stats collections ----
 
   socketCluster.on(socketCluster.EVENT_WORKER_CLUSTER_START, function (workerClusterInfo) {
     console.log('   >> WorkerCluster PID:', workerClusterInfo.pid);
