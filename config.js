@@ -3,17 +3,17 @@ let path = require('path');
 module.exports = {
   state: {
     imageName: 'socketcluster/scc-state',
-    versionTag: 'v2.0.0',
+    versionTag: 'v6.0.1',
     internalContainerPort: 7777
   },
   regular: {
     imageName: 'socketcluster/socketcluster',
-    versionTag: 'v11.3.1',
+    versionTag: 'v14.0.0',
     internalContainerPort: 8000
   },
   broker: {
     imageName: 'socketcluster/scc-broker',
-    versionTag: 'v2.0.0',
+    versionTag: 'v6.0.1',
     internalContainerPort: 8888
   },
   subscriberInstancePath: path.resolve(__dirname, 'client-subscribers.js'),

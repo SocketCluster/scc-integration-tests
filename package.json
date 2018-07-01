@@ -1,6 +1,6 @@
 {
   "name": "scc-integration-tests",
-  "version": "1.0.0",
+  "version": "6.0.0",
   "description": "Integration tests for SCC",
   "main": "index.js",
   "scripts": {
