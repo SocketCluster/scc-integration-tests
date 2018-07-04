@@ -17,5 +17,6 @@ module.exports = {
     internalContainerPort: 8888
   },
   subscriberInstancePath: path.resolve(__dirname, 'client-subscribers.js'),
-  publisherInstancePath: path.resolve(__dirname, 'client-publishers.js')
+  publisherInstancePath: path.resolve(__dirname, 'client-publishers.js'),
+  indirectPublisherInstancePath: path.resolve(__dirname, 'client-indirect-publishers.js')
 };

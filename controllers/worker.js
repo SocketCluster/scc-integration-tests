@@ -45,6 +45,11 @@ class Worker extends SCWorker {
         scServer.exchange.publish('sample', count);
       });
 
+      socket.on('publishToChannel', function (data, respond) {
+        scServer.exchange.publish(data.channel, data.message);
+        respond();
+      });
+
       var interval = setInterval(function () {
         socket.emit('rand', {
           rand: Math.floor(Math.random() * 5)

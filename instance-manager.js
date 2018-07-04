@@ -261,6 +261,33 @@ InstanceManager.prototype.launchPublisherNodeInstance = function (instanceName, 
   });
 };
 
+InstanceManager.prototype.launchIndirectPublisherNodeInstance = function (instanceName, options) {
+  let optionsString = JSON.stringify(options || {});
+  let args = ['--options', optionsString];
+  return new Promise((resolve, reject) => {
+    let instanceProcess = fork(this.config.indirectPublisherInstancePath, args);
+    instanceProcess.on('error', (err) => {
+      instanceProcess.removeAllListeners('error');
+      instanceProcess.removeAllListeners('message');
+      reject(err);
+    });
+    instanceProcess.sentMessages = [];
+    instanceProcess.failedToSendMessages = [];
+    instanceProcess.on('message', (message) => {
+      if (message.type === 'ready') {
+        instanceProcess.removeAllListeners('error');
+        resolve(instanceProcess);
+      } else if (message.type === 'sent') {
+        instanceProcess.sentMessages.push(message);
+      } else if (message.type === 'failedToSend') {
+        instanceProcess.failedToSendMessages.push(message);
+      }
+    });
+    instanceProcess.instanceName = instanceName;
+    this.activeNodeInstanceMap[instanceName] = instanceProcess;
+  });
+};
+
 InstanceManager.prototype.destroyNodeInstance = function (instanceName) {
   this.activeNodeInstanceMap[instanceName].kill();
   delete this.activeNodeInstanceMap[instanceName];
