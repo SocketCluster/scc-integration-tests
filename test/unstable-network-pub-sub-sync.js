@@ -23,10 +23,10 @@ describe('Unstable network, pub/sub sync', () => {
 
       beforeEach(async function () {
         instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
-          regularInstanceCount: 2,
+          workerInstanceCount: 2,
           brokerInstanceCount: 3,
           stateInstanceStartPort: 7777,
-          regularInstanceStartPort: 8000,
+          workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888
         });
         await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
@@ -69,10 +69,10 @@ describe('Unstable network, pub/sub sync', () => {
 
       beforeEach(async function () {
         instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
-          regularInstanceCount: 2,
+          workerInstanceCount: 2,
           brokerInstanceCount: 3,
           stateInstanceStartPort: 7777,
-          regularInstanceStartPort: 8000,
+          workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888
         });
         await instances.launchSCCInstanceCluster(instanceDetailsList, 0);
@@ -115,10 +115,10 @@ describe('Unstable network, pub/sub sync', () => {
 
       beforeEach(async function () {
         instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
-          regularInstanceCount: 2,
+          workerInstanceCount: 2,
           brokerInstanceCount: 1,
           stateInstanceStartPort: 7777,
-          regularInstanceStartPort: 8000,
+          workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888
         });
         let clusterDetails = await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
@@ -169,12 +169,12 @@ describe('Unstable network, pub/sub sync', () => {
 
       beforeEach(async function () {
         instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
-          regularInstanceCount: 2,
+          workerInstanceCount: 2,
           brokerInstanceCount: 1,
           stateInstanceStartPort: 7777,
-          regularInstanceStartPort: 8000,
+          workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888,
-          regularInstanceEnvs: {
+          workerInstanceEnvs: {
             SOCKETCLUSTER_WORKERS: 4,
             SOCKETCLUSTER_BROKERS: 4
           }
@@ -227,10 +227,10 @@ describe('Unstable network, pub/sub sync', () => {
 
       beforeEach(async function () {
         instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
-          regularInstanceCount: 2,
+          workerInstanceCount: 2,
           brokerInstanceCount: 1,
           stateInstanceStartPort: 7777,
-          regularInstanceStartPort: 8000,
+          workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888,
           brokerInstanceEnvs: {
             SOCKETCLUSTER_WORKERS: 4,
@@ -290,10 +290,10 @@ describe('Unstable network, pub/sub sync', () => {
 
       beforeEach(async function () {
         instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
-          regularInstanceCount: 2,
+          workerInstanceCount: 2,
           brokerInstanceCount: 3,
           stateInstanceStartPort: 7777,
-          regularInstanceStartPort: 8000,
+          workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888
         });
         await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
@@ -336,10 +336,10 @@ describe('Unstable network, pub/sub sync', () => {
 
       beforeEach(async function () {
         instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
-          regularInstanceCount: 2,
+          workerInstanceCount: 2,
           brokerInstanceCount: 3,
           stateInstanceStartPort: 7777,
-          regularInstanceStartPort: 8000,
+          workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888
         });
         await instances.launchSCCInstanceCluster(instanceDetailsList, 0);
@@ -382,10 +382,10 @@ describe('Unstable network, pub/sub sync', () => {
 
       beforeEach(async function () {
         instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
-          regularInstanceCount: 2,
+          workerInstanceCount: 2,
           brokerInstanceCount: 3,
           stateInstanceStartPort: 7777,
-          regularInstanceStartPort: 8000,
+          workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888
         });
 
@@ -445,10 +445,10 @@ describe('Unstable network, pub/sub sync', () => {
 
       beforeEach(async function () {
         instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
-          regularInstanceCount: 2,
+          workerInstanceCount: 2,
           brokerInstanceCount: 1,
           stateInstanceStartPort: 7777,
-          regularInstanceStartPort: 8000,
+          workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888
         });
         let clusterDetails = await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);

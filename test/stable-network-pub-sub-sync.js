@@ -24,10 +24,10 @@ describe('Stable network, pub/sub sync', () => {
 
     beforeEach(async function () {
       instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
-        regularInstanceCount: 2,
+        workerInstanceCount: 2,
         brokerInstanceCount: 2,
         stateInstanceStartPort: 7777,
-        regularInstanceStartPort: 8000,
+        workerInstanceStartPort: 8000,
         brokerInstanceStartPort: 8888
       });
       await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
@@ -64,12 +64,12 @@ describe('Stable network, pub/sub sync', () => {
 
     beforeEach(async function () {
       instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
-        regularInstanceCount: 2,
+        workerInstanceCount: 2,
         brokerInstanceCount: 4,
         stateInstanceStartPort: 7777,
         brokerInstanceStartPort: 8888,
-        regularInstanceStartPort: 8000,
-        regularInstanceEnvs: {
+        workerInstanceStartPort: 8000,
+        workerInstanceEnvs: {
           SCC_CLIENT_POOL_SIZE: 3,
           SCC_MAPPING_ENGINE: 'simple'
         }
@@ -99,10 +99,10 @@ describe('Stable network, pub/sub sync', () => {
 
     it('messages are evenly spread across scc-broker instances and also within client pools', function () {
       // console.log('      ' + util.inspect(stats, {depth: null, colors: true}));
-      let subscriberRegularInstanceStats = stats['scc-regular-1'];
+      let subscriberWorkerInstanceStats = stats['scc-worker-1'];
 
-      Object.keys(subscriberRegularInstanceStats).forEach((sccBrokerURI) => {
-        let sccBrokerStats = subscriberRegularInstanceStats[sccBrokerURI];
+      Object.keys(subscriberWorkerInstanceStats).forEach((sccBrokerURI) => {
+        let sccBrokerStats = subscriberWorkerInstanceStats[sccBrokerURI];
         let sccBrokerSubscribeSum = 0;
         Object.keys(sccBrokerStats).forEach((poolIndex) => {
           let poolClientStats = sccBrokerStats[poolIndex];
@@ -114,7 +114,7 @@ describe('Stable network, pub/sub sync', () => {
 
           assert.equal(subscribeFails === 0, true);
 
-          // Since no publishers were connected to this regular instance, we don't
+          // Since no publishers were connected to this scc-worker instance, we don't
           // expect any inbound publishes on this instance.
           assert.equal(publishes === 0, true);
           assert.equal(publishFails === 0, true);
@@ -130,10 +130,10 @@ describe('Stable network, pub/sub sync', () => {
         assert.equal(sccBrokerSubscribeSum < 280, true);
       });
 
-      let publisherRegularInstanceStats = stats['scc-regular-2'];
+      let publisherWorkerInstanceStats = stats['scc-worker-2'];
 
-      Object.keys(publisherRegularInstanceStats).forEach((sccBrokerURI) => {
-        let sccBrokerStats = publisherRegularInstanceStats[sccBrokerURI];
+      Object.keys(publisherWorkerInstanceStats).forEach((sccBrokerURI) => {
+        let sccBrokerStats = publisherWorkerInstanceStats[sccBrokerURI];
         let sccBrokerPublishSum = 0;
         Object.keys(sccBrokerStats).forEach((poolIndex) => {
           let poolClientStats = sccBrokerStats[poolIndex];
@@ -145,7 +145,7 @@ describe('Stable network, pub/sub sync', () => {
 
           assert.equal(publishFails === 0, true);
 
-          // Since no subscribers were connected to this regular instance, we don't
+          // Since no subscribers were connected to this scc-worker instance, we don't
           // expect any inbound subscribes on this instance.
           assert.equal(subscribes === 0, true);
           assert.equal(subscribeFails === 0, true);
@@ -174,12 +174,12 @@ describe('Stable network, pub/sub sync', () => {
 
     beforeEach(async function () {
       instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
-        regularInstanceCount: 2,
+        workerInstanceCount: 2,
         brokerInstanceCount: 4,
         stateInstanceStartPort: 7777,
         brokerInstanceStartPort: 8888,
-        regularInstanceStartPort: 8000,
-        regularInstanceEnvs: {
+        workerInstanceStartPort: 8000,
+        workerInstanceEnvs: {
           SCC_CLIENT_POOL_SIZE: 3,
           SCC_MAPPING_ENGINE: 'skeletonRendezvous'
         }
@@ -209,10 +209,10 @@ describe('Stable network, pub/sub sync', () => {
 
     it('messages are evenly spread across scc-broker instances and also within client pools', function () {
       // console.log('      ' + util.inspect(stats, {depth: null, colors: true}));
-      let subscriberRegularInstanceStats = stats['scc-regular-1'];
+      let subscriberWorkerInstanceStats = stats['scc-worker-1'];
 
-      Object.keys(subscriberRegularInstanceStats).forEach((sccBrokerURI) => {
-        let sccBrokerStats = subscriberRegularInstanceStats[sccBrokerURI];
+      Object.keys(subscriberWorkerInstanceStats).forEach((sccBrokerURI) => {
+        let sccBrokerStats = subscriberWorkerInstanceStats[sccBrokerURI];
         let sccBrokerSubscribeSum = 0;
         Object.keys(sccBrokerStats).forEach((poolIndex) => {
           let poolClientStats = sccBrokerStats[poolIndex];
@@ -224,7 +224,7 @@ describe('Stable network, pub/sub sync', () => {
 
           assert.equal(subscribeFails === 0, true);
 
-          // Since no publishers were connected to this regular instance, we don't
+          // Since no publishers were connected to this scc-worker instance, we don't
           // expect any inbound publishes on this instance.
           assert.equal(publishes === 0, true);
           assert.equal(publishFails === 0, true);
@@ -240,10 +240,10 @@ describe('Stable network, pub/sub sync', () => {
         assert.equal(sccBrokerSubscribeSum < 280, true);
       });
 
-      let publisherRegularInstanceStats = stats['scc-regular-2'];
+      let publisherWorkerInstanceStats = stats['scc-worker-2'];
 
-      Object.keys(publisherRegularInstanceStats).forEach((sccBrokerURI) => {
-        let sccBrokerStats = publisherRegularInstanceStats[sccBrokerURI];
+      Object.keys(publisherWorkerInstanceStats).forEach((sccBrokerURI) => {
+        let sccBrokerStats = publisherWorkerInstanceStats[sccBrokerURI];
         let sccBrokerPublishSum = 0;
         Object.keys(sccBrokerStats).forEach((poolIndex) => {
           let poolClientStats = sccBrokerStats[poolIndex];
@@ -255,7 +255,7 @@ describe('Stable network, pub/sub sync', () => {
 
           assert.equal(publishFails === 0, true);
 
-          // Since no subscribers were connected to this regular instance, we don't
+          // Since no subscribers were connected to this scc-worker instance, we don't
           // expect any inbound subscribes on this instance.
           assert.equal(subscribes === 0, true);
           assert.equal(subscribeFails === 0, true);

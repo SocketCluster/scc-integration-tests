@@ -24,7 +24,7 @@ InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPo
     let envFlag = '';
     if (instanceType !== 'state') {
       envFlag = ` -e "SCC_STATE_SERVER_HOST=${stateServerHost}"`;
-      if (instanceType === 'regular') {
+      if (instanceType === 'worker') {
         envFlag += ` -e "SOCKETCLUSTER_MASTER_CONTROLLER=/usr/src/app/server.js"`;
         envFlag += ` -e "SOCKETCLUSTER_WORKER_CONTROLLER=/usr/src/app/worker.js"`;
         envFlag += ` -e "SOCKETCLUSTER_BROKER_CONTROLLER=/usr/src/app/broker.js"`;
@@ -146,11 +146,11 @@ InstanceManager.prototype.generateSCCInstanceClusterDetailsList = function (opti
   let instanceDetailList = [];
 
   let stateInstanceStartPort = options.stateInstanceStartPort || 7777;
-  let regularInstanceStartPort = options.regularInstanceStartPort || 8000;
+  let workerInstanceStartPort = options.workerInstanceStartPort || 8000;
   let brokerInstanceStartPort = options.brokerInstanceStartPort || 8888;
 
   let stateInstanceEnvs = options.stateInstanceEnvs || null;
-  let regularInstanceEnvs = options.regularInstanceEnvs || null;
+  let workerInstanceEnvs = options.workerInstanceEnvs || null;
   let brokerInstanceEnvs = options.brokerInstanceEnvs || null;
 
   instanceDetailList.push({
@@ -159,12 +159,12 @@ InstanceManager.prototype.generateSCCInstanceClusterDetailsList = function (opti
     port: stateInstanceStartPort,
     envs: stateInstanceEnvs
   });
-  for (let i = 0; i < options.regularInstanceCount; i++) {
+  for (let i = 0; i < options.workerInstanceCount; i++) {
     instanceDetailList.push({
-      type: 'regular',
-      name: this.generateSCCInstanceName('regular'),
-      port: regularInstanceStartPort + i,
-      envs: regularInstanceEnvs
+      type: 'worker',
+      name: this.generateSCCInstanceName('worker'),
+      port: workerInstanceStartPort + i,
+      envs: workerInstanceEnvs
     });
   }
   for (let i = 0; i < options.brokerInstanceCount; i++) {

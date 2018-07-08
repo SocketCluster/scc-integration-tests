@@ -9,7 +9,7 @@ function StatsCollector(sccInstanceClusterDetailsList) {
 
   let targets = this.sccInstanceClusterDetailsList
   .filter((instanceDetails) => {
-    return instanceDetails.type === 'regular';
+    return instanceDetails.type === 'worker';
   });
 
   targets.forEach((instanceDetails) => {

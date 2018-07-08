@@ -6,7 +6,7 @@ module.exports = {
     versionTag: 'v6.0.3',
     internalContainerPort: 7777
   },
-  regular: {
+  worker: {
     imageName: 'socketcluster/socketcluster',
     versionTag: 'v14.0.0',
     internalContainerPort: 8000
