@@ -3,12 +3,12 @@ let path = require('path');
 module.exports = {
   state: {
     imageName: 'socketcluster/scc-state',
-    versionTag: 'v6.0.3',
+    versionTag: 'v6.1.0',
     internalContainerPort: 7777
   },
   worker: {
     imageName: 'socketcluster/socketcluster',
-    versionTag: 'v14.0.0',
+    versionTag: 'v14.0.4',
     internalContainerPort: 8000
   },
   broker: {
