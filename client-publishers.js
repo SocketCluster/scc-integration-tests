@@ -1,12 +1,11 @@
-let socketClusterClient = require('socketcluster-client');
+let asyngularClient = require('asyngular-client');
 let argv = require('minimist')(process.argv.slice(2));
 
 let options = JSON.parse(argv.options || '{}');
 
 let clientOptions = {
   port: options.targetPort || 8000,
-  hostname: options.targetHost || '127.0.0.1',
-  multiplex: false
+  hostname: options.targetHost || '127.0.0.1'
 };
 
 let clientCount = options.clientCount || 1;
@@ -25,37 +24,46 @@ let c = 0;
 
 for (let i = 0; i < clientCount; i++) {
   let intervalRandomness = Math.random() * publishRandomness;
-  let socket = socketClusterClient.create(clientOptions);
-  socket.on('error', (err) => {
-    process.send({
-      type: 'error',
-      name: err.name,
-      message: err.message
-    });
-  });
+  let socket = asyngularClient.create(clientOptions);
+
+  (async () => {
+    for await (let {error} of socket.listener('error')) {
+      process.send({
+        type: 'error',
+        name: error.name,
+        message: error.message
+      });
+    }
+  })();
+
   let packet = {
     message: `This is socket ${i}`
   };
   socket.publishCount = 0;
   socket.publishInterval = setInterval(() => {
     let targetChannelName = channelNames[c++ % uniqueChannelCount];
-    socket.publish(targetChannelName, packet, (err) => {
-      if (err) {
+
+    (async () => {
+      try {
+        await socket.invokePublish(targetChannelName, packet);
+      } catch (error) {
         process.send({
           type: 'failedToSend',
           socketId: socket.id,
           channel: targetChannelName,
           data: packet
         });
-      } else {
-        process.send({
-          type: 'sent',
-          socketId: socket.id,
-          channel: targetChannelName,
-          data: packet
-        });
+
+        return;
       }
-    });
+      process.send({
+        type: 'sent',
+        socketId: socket.id,
+        channel: targetChannelName,
+        data: packet
+      });
+    })();
+
     if (++socket.publishCount >= publishesPerClient) {
       clearInterval(socket.publishInterval);
     }

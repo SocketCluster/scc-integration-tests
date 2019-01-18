@@ -1,31 +1,33 @@
 {
-  "name": "scc-integration-tests",
-  "version": "6.0.0",
-  "description": "Integration tests for SCC",
+  "name": "agc-integration-tests",
+  "version": "3.0.0",
+  "description": "Integration tests for AGC",
   "main": "index.js",
   "scripts": {
     "test": "node_modules/mocha/bin/mocha --reporter spec --timeout 120000 --slow 120000"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SocketCluster/scc-integration-tests.git"
+    "url": "git+https://github.com/SocketCluster/agc-integration-tests.git"
   },
   "keywords": [
-    "SocketCluster",
-    "SCC",
+    "asyngular",
+    "agc",
+    "socketcluster",
     "test",
     "integration"
   ],
   "author": "Jonathan Gros-Dubois",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/SocketCluster/scc-integration-tests/issues"
+    "url": "https://github.com/SocketCluster/agc-integration-tests/issues"
   },
-  "homepage": "https://github.com/SocketCluster/scc-integration-tests#readme",
+  "homepage": "https://github.com/SocketCluster/agc-integration-tests#readme",
   "dependencies": {
+    "agc-broker-client": "^3.0.1",
+    "asyngular-client": "^3.1.2",
     "minimist": "^1.2.0",
     "mocha": "^5.0.4",
-    "socketcluster-client": "^14.2.1",
     "uuid": "^3.2.1"
   }
 }

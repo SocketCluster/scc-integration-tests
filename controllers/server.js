@@ -1,76 +1,124 @@
-/*
-  This is the SocketCluster master controller file.
-  It is responsible for bootstrapping the SocketCluster master process.
-  Be careful when modifying the options object below.
-  If you plan to run SCC on Kubernetes or another orchestrator at some point
-  in the future, avoid changing the environment variable names below as
-  each one has a specific meaning within the SC ecosystem.
-*/
+const http = require('http');
+const eetase = require('eetase');
+const asyngularServer = require('asyngular-server');
+const express = require('express');
+const serveStatic = require('serve-static');
+const path = require('path');
+const morgan = require('morgan');
+const uuid = require('uuid');
+const agcBrokerClient = require('agc-broker-client');
 
-var path = require('path');
-var argv = require('minimist')(process.argv.slice(2));
-var scHotReboot = require('sc-hot-reboot');
+const ENVIRONMENT = process.env.ENV || 'dev';
+const ASYNGULAR_PORT = process.env.ASYNGULAR_PORT || 8000;
+const ASYNGULAR_WS_ENGINE = process.env.ASYNGULAR_WS_ENGINE || 'ws';
+const ASYNGULAR_SOCKET_CHANNEL_LIMIT = Number(process.env.ASYNGULAR_SOCKET_CHANNEL_LIMIT) || 1000;
+const ASYNGULAR_LOG_LEVEL = process.env.ASYNGULAR_LOG_LEVEL || 2;
 
-var fsUtil = require('socketcluster/fsutil');
-var waitForFile = fsUtil.waitForFile;
+const AGC_INSTANCE_ID = uuid.v4();
+const AGC_STATE_SERVER_HOST = process.env.AGC_STATE_SERVER_HOST || null;
+const AGC_STATE_SERVER_PORT = process.env.AGC_STATE_SERVER_PORT || null;
+const AGC_MAPPING_ENGINE = process.env.AGC_MAPPING_ENGINE || null;
+const AGC_CLIENT_POOL_SIZE = process.env.AGC_CLIENT_POOL_SIZE || null;
+const AGC_AUTH_KEY = process.env.AGC_AUTH_KEY || null;
+const AGC_INSTANCE_IP = process.env.AGC_INSTANCE_IP || null;
+const AGC_INSTANCE_IP_FAMILY = process.env.AGC_INSTANCE_IP_FAMILY || null;
+const AGC_STATE_SERVER_CONNECT_TIMEOUT = Number(process.env.AGC_STATE_SERVER_CONNECT_TIMEOUT) || null;
+const AGC_STATE_SERVER_ACK_TIMEOUT = Number(process.env.AGC_STATE_SERVER_ACK_TIMEOUT) || null;
+const AGC_STATE_SERVER_RECONNECT_RANDOMNESS = Number(process.env.AGC_STATE_SERVER_RECONNECT_RANDOMNESS) || null;
+const AGC_PUB_SUB_BATCH_DURATION = Number(process.env.AGC_PUB_SUB_BATCH_DURATION) || null;
+const AGC_BROKER_RETRY_DELAY = Number(process.env.AGC_BROKER_RETRY_DELAY) || null;
 
-var SocketCluster = require('socketcluster');
+let agOptions;
 
-var workerControllerPath = argv.wc || process.env.SOCKETCLUSTER_WORKER_CONTROLLER;
-var brokerControllerPath = argv.bc || process.env.SOCKETCLUSTER_BROKER_CONTROLLER;
-var workerClusterControllerPath = argv.wcc || process.env.SOCKETCLUSTER_WORKERCLUSTER_CONTROLLER;
-var environment = process.env.ENV || 'dev';
-
-var options = {
-  workers: Number(argv.w) || Number(process.env.SOCKETCLUSTER_WORKERS) || 1,
-  brokers: Number(argv.b) || Number(process.env.SOCKETCLUSTER_BROKERS) || 1,
-  port: Number(argv.p) || Number(process.env.SOCKETCLUSTER_PORT) || 8000,
-  wsEngine: process.env.SOCKETCLUSTER_WS_ENGINE || 'ws',
-  appName: argv.n || process.env.SOCKETCLUSTER_APP_NAME || null,
-  workerController: workerControllerPath || path.join(__dirname, 'worker.js'),
-  brokerController: brokerControllerPath || path.join(__dirname, 'broker.js'),
-  workerClusterController: workerClusterControllerPath || null,
-  socketChannelLimit: Number(process.env.SOCKETCLUSTER_SOCKET_CHANNEL_LIMIT) || 1000,
-  clusterStateServerHost: argv.cssh || process.env.SCC_STATE_SERVER_HOST || null,
-  clusterStateServerPort: process.env.SCC_STATE_SERVER_PORT || null,
-  clusterMappingEngine: process.env.SCC_MAPPING_ENGINE || null,
-  clusterClientPoolSize: process.env.SCC_CLIENT_POOL_SIZE || null,
-  clusterAuthKey: process.env.SCC_AUTH_KEY || null,
-  clusterInstanceIp: process.env.SCC_INSTANCE_IP || null,
-  clusterInstanceIpFamily: process.env.SCC_INSTANCE_IP_FAMILY || null,
-  clusterStateServerConnectTimeout: Number(process.env.SCC_STATE_SERVER_CONNECT_TIMEOUT) || null,
-  clusterStateServerAckTimeout: Number(process.env.SCC_STATE_SERVER_ACK_TIMEOUT) || null,
-  clusterStateServerReconnectRandomness: Number(process.env.SCC_STATE_SERVER_RECONNECT_RANDOMNESS) || null,
-  crashWorkerOnError: argv['auto-reboot'] != false,
-  // If using nodemon, set this to true, and make sure that environment is 'dev'.
-  killMasterOnSignal: false,
-  environment: environment
-};
-
-var bootTimeout = Number(process.env.SOCKETCLUSTER_CONTROLLER_BOOT_TIMEOUT) || 10000;
-var SOCKETCLUSTER_OPTIONS;
-
-if (process.env.SOCKETCLUSTER_OPTIONS) {
-  SOCKETCLUSTER_OPTIONS = JSON.parse(process.env.SOCKETCLUSTER_OPTIONS);
+if (process.env.ASYNGULAR_OPTIONS) {
+  agOptions = JSON.parse(process.env.ASYNGULAR_OPTIONS);
+} else {
+  agOptions = {};
 }
 
-for (var i in SOCKETCLUSTER_OPTIONS) {
-  if (SOCKETCLUSTER_OPTIONS.hasOwnProperty(i)) {
-    options[i] = SOCKETCLUSTER_OPTIONS[i];
+let httpServer = eetase(http.createServer());
+let agServer = asyngularServer.attach(httpServer, agOptions);
+
+let expressApp = express();
+if (ENVIRONMENT === 'dev') {
+  // Log every HTTP request. See https://github.com/expressjs/morgan for other
+  // available formats.
+  expressApp.use(morgan('dev'));
+}
+expressApp.use(serveStatic(path.resolve(__dirname, 'public')));
+
+// Add GET /health-check express route
+expressApp.get('/health-check', (req, res) => {
+  res.status(200).send('OK');
+});
+
+// HTTP request handling loop.
+(async () => {
+  for await (let requestData of httpServer.listener('request')) {
+    expressApp.apply(null, requestData);
   }
+})();
+
+if (ASYNGULAR_LOG_LEVEL >= 1) {
+  (async () => {
+    for await (let {error} of agServer.listener('error')) {
+      console.error(error);
+    }
+  })();
 }
 
-var start = function () {
-  var socketCluster = new SocketCluster(options);
+if (ASYNGULAR_LOG_LEVEL >= 2) {
+  console.log(
+    `   ${colorText('[Active]', 32)} Asyngular worker with PID ${process.pid} is listening on port ${ASYNGULAR_PORT}`
+  );
+
+  (async () => {
+    for await (let {warning} of agServer.listener('warning')) {
+      console.warn(warning);
+    }
+  })();
+}
+
+function colorText(message, color) {
+  if (color) {
+    return `\x1b[${color}m${message}\x1b[0m`;
+  }
+  return message;
+}
+
+let stats = {};
+
+if (AGC_STATE_SERVER_HOST) {
+  // Setup broker client to connect to the Asyngular cluster (AGC).
+  let agcClient = agcBrokerClient.attach(agServer.brokerEngine, {
+    instanceId: AGC_INSTANCE_ID,
+    instancePort: ASYNGULAR_PORT,
+    instanceIp: AGC_INSTANCE_IP,
+    instanceIpFamily: AGC_INSTANCE_IP_FAMILY,
+    pubSubBatchDuration: AGC_PUB_SUB_BATCH_DURATION,
+    stateServerHost: AGC_STATE_SERVER_HOST,
+    stateServerPort: AGC_STATE_SERVER_PORT,
+    mappingEngine: AGC_MAPPING_ENGINE,
+    clientPoolSize: AGC_CLIENT_POOL_SIZE,
+    authKey: AGC_AUTH_KEY,
+    stateServerConnectTimeout: AGC_STATE_SERVER_CONNECT_TIMEOUT,
+    stateServerAckTimeout: AGC_STATE_SERVER_ACK_TIMEOUT,
+    stateServerReconnectRandomness: AGC_STATE_SERVER_RECONNECT_RANDOMNESS,
+    brokerRetryDelay: AGC_BROKER_RETRY_DELAY
+  });
+
+  if (ASYNGULAR_LOG_LEVEL >= 1) {
+    (async () => {
+      for await (let {error} of agcClient.listener('error')) {
+        error.name = 'AGCError';
+        console.error(error);
+      }
+    })();
+  }
 
   // ---- Start stats collection ----
 
-  var stats = {};
-
-  socketCluster.on('brokerMessage', function (brokerId, eventObject) {
-    var event = eventObject.event;
-    var data = eventObject.data;
-
+  function handleEventData(event, data) {
     if (!stats[data.targetURI]) {
       stats[data.targetURI] = {};
     }
@@ -84,59 +132,54 @@ var start = function () {
     }
     var poolIndexStats = stats[data.targetURI][data.poolIndex];
     poolIndexStats[event]++;
-  });
+  }
 
-  socketCluster.on('workerMessage', (workerId, eventObject, respond) => {
-    if (eventObject) {
-      if (eventObject.action === 'getStats') {
-        respond(null, stats);
-      } else {
-        respond(new Error("Unrecognized action '" + eventObject.action + "'"));
-      }
-    } else {
-      respond(new Error('The action property was not specified'));
+  (async () => {
+    for await (let data of agcClient.listener('subscribe')) {
+      handleEventData('subscribe', data);
     }
-  });
+  })();
+
+  (async () => {
+    for await (let data of agcClient.listener('subscribeFail')) {
+      handleEventData('subscribeFail', data);
+    }
+  })();
+
+  (async () => {
+    for await (let data of agcClient.listener('publish')) {
+      handleEventData('publish', data);
+    }
+  })();
+
+  (async () => {
+    for await (let data of agcClient.listener('publishFail')) {
+      handleEventData('publishFail', data);
+    }
+  })();
 
   // ---- End stats collections ----
+}
 
-  socketCluster.on(socketCluster.EVENT_WORKER_CLUSTER_START, function (workerClusterInfo) {
-    console.log('   >> WorkerCluster PID:', workerClusterInfo.pid);
-  });
+// Asyngular/WebSocket connection handling loop.
+(async () => {
+  for await (let {socket} of agServer.listener('connection')) {
+    // Handle socket connection.
 
-  if (socketCluster.options.environment === 'dev') {
-    // This will cause SC workers to reboot when code changes anywhere in the app directory.
-    // The second options argument here is passed directly to chokidar.
-    // See https://github.com/paulmillr/chokidar#api for details.
-    console.log(`   !! The sc-hot-reboot plugin is watching for code changes in the ${__dirname} directory`);
-    scHotReboot.attach(socketCluster, {
-      cwd: __dirname,
-      ignored: ['public', 'node_modules', 'README.md', 'Dockerfile', 'server.js', 'broker.js', /[\/\\]\./, '*.log']
-    });
+    (async () => {
+      for await (let request of socket.procedure('publishToChannel')) {
+        agServer.exchange.transmitPublish(request.data.channel, request.data.message);
+        request.end();
+      }
+    })();
+
+    (async () => {
+      for await (let request of socket.procedure('getStats')) {
+        request.end(stats);
+      }
+    })();
+
   }
-};
+})();
 
-var bootCheckInterval = Number(process.env.SOCKETCLUSTER_BOOT_CHECK_INTERVAL) || 200;
-var bootStartTime = Date.now();
-
-// Detect when Docker volumes are ready.
-var startWhenFileIsReady = (filePath) => {
-  var errorMessage = `Failed to locate a controller file at path ${filePath} ` +
-  `before SOCKETCLUSTER_CONTROLLER_BOOT_TIMEOUT`;
-
-  return waitForFile(filePath, bootCheckInterval, bootStartTime, bootTimeout, errorMessage);
-};
-
-var filesReadyPromises = [
-  startWhenFileIsReady(workerControllerPath),
-  startWhenFileIsReady(brokerControllerPath),
-  startWhenFileIsReady(workerClusterControllerPath)
-];
-Promise.all(filesReadyPromises)
-.then(() => {
-  start();
-})
-.catch((err) => {
-  console.error(err.stack);
-  process.exit(1);
-});
+httpServer.listen(ASYNGULAR_PORT);

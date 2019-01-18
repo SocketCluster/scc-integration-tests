@@ -22,14 +22,14 @@ describe('Instances start and stop', () => {
       let brokerInstanceName;
 
       beforeEach(async function () {
-        stateInstanceName = instances.generateSCCInstanceName('state');
-        workerInstanceName = instances.generateSCCInstanceName('worker');
-        brokerInstanceName = instances.generateSCCInstanceName('broker');
+        stateInstanceName = instances.generateAGCInstanceName('state');
+        workerInstanceName = instances.generateAGCInstanceName('worker');
+        brokerInstanceName = instances.generateAGCInstanceName('broker');
 
         await Promise.all([
-          instances.launchSCCInstance('state', 7777, stateInstanceName),
-          instances.launchSCCInstance('worker', 8000, workerInstanceName),
-          instances.launchSCCInstance('broker', 8888, brokerInstanceName)
+          instances.launchAGCInstance('state', 7777, stateInstanceName),
+          instances.launchAGCInstance('worker', 8000, workerInstanceName),
+          instances.launchAGCInstance('broker', 8888, brokerInstanceName)
         ]);
       });
 
@@ -51,18 +51,18 @@ describe('Instances start and stop', () => {
       let brokerInstanceName2;
 
       beforeEach(async function () {
-        stateInstanceName = instances.generateSCCInstanceName('state');
-        workerInstanceName1 = instances.generateSCCInstanceName('worker');
-        brokerInstanceName1 = instances.generateSCCInstanceName('broker');
-        workerInstanceName2 = instances.generateSCCInstanceName('worker');
-        brokerInstanceName2 = instances.generateSCCInstanceName('broker');
+        stateInstanceName = instances.generateAGCInstanceName('state');
+        workerInstanceName1 = instances.generateAGCInstanceName('worker');
+        brokerInstanceName1 = instances.generateAGCInstanceName('broker');
+        workerInstanceName2 = instances.generateAGCInstanceName('worker');
+        brokerInstanceName2 = instances.generateAGCInstanceName('broker');
 
         await Promise.all([
-          instances.launchSCCInstance('state', 7777, stateInstanceName),
-          instances.launchSCCInstance('worker', 8000, workerInstanceName1),
-          instances.launchSCCInstance('broker', 8888, brokerInstanceName1),
-          instances.launchSCCInstance('worker', 8001, workerInstanceName2),
-          instances.launchSCCInstance('broker', 8889, brokerInstanceName2)
+          instances.launchAGCInstance('state', 7777, stateInstanceName),
+          instances.launchAGCInstance('worker', 8000, workerInstanceName1),
+          instances.launchAGCInstance('broker', 8888, brokerInstanceName1),
+          instances.launchAGCInstance('worker', 8001, workerInstanceName2),
+          instances.launchAGCInstance('broker', 8889, brokerInstanceName2)
         ]);
       });
 

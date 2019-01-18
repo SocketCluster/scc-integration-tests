@@ -22,14 +22,14 @@ describe('Unstable network, pub/sub sync', () => {
       let publisherNodeInstance;
 
       beforeEach(async function () {
-        instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
+        instanceDetailsList = instances.generateAGCInstanceClusterDetailsList({
           workerInstanceCount: 2,
           brokerInstanceCount: 3,
           stateInstanceStartPort: 7777,
           workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888
         });
-        await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
+        await instances.launchAGCInstanceCluster(instanceDetailsList, 2000);
         subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
           targetPort: 8000,
           clientCount: 100,
@@ -40,8 +40,8 @@ describe('Unstable network, pub/sub sync', () => {
         let brokerInstanceDetailsList = instanceDetailsList.filter((instanceDetails) => {
           return instanceDetails.type === 'broker';
         });
-        instances.stopSCCInstance(brokerInstanceDetailsList[0].name);
-        instances.stopSCCInstance(brokerInstanceDetailsList[1].name);
+        instances.stopAGCInstance(brokerInstanceDetailsList[0].name);
+        instances.stopAGCInstance(brokerInstanceDetailsList[1].name);
         // Wait for cluster to sync.
         await instances.waitForTimeout(1500);
         publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
@@ -55,7 +55,7 @@ describe('Unstable network, pub/sub sync', () => {
         await instances.waitForTimeout(5000);
       });
 
-      it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
+      it('messages that are published on one Asyngular instance should reach subscribers on a different Asyngular instance in the cluster', function () {
         assert.equal(publisherNodeInstance.failedToSendMessages.length, 0);
         assert.equal(subscriberNodeInstance.receivedMessages.length, publisherNodeInstance.sentMessages.length);
         assert.equal(subscriberNodeInstance.receivedMessages.length, 100);
@@ -68,14 +68,14 @@ describe('Unstable network, pub/sub sync', () => {
       let publisherNodeInstance;
 
       beforeEach(async function () {
-        instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
+        instanceDetailsList = instances.generateAGCInstanceClusterDetailsList({
           workerInstanceCount: 2,
           brokerInstanceCount: 3,
           stateInstanceStartPort: 7777,
           workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888
         });
-        await instances.launchSCCInstanceCluster(instanceDetailsList, 0);
+        await instances.launchAGCInstanceCluster(instanceDetailsList, 0);
         subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
           targetPort: 8000,
           clientCount: 100,
@@ -86,8 +86,8 @@ describe('Unstable network, pub/sub sync', () => {
         let brokerInstanceDetailsList = instanceDetailsList.filter((instanceDetails) => {
           return instanceDetails.type === 'broker';
         });
-        instances.stopSCCInstance(brokerInstanceDetailsList[0].name);
-        instances.stopSCCInstance(brokerInstanceDetailsList[1].name);
+        instances.stopAGCInstance(brokerInstanceDetailsList[0].name);
+        instances.stopAGCInstance(brokerInstanceDetailsList[1].name);
         // Wait for cluster to sync.
         await instances.waitForTimeout(1500);
         publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
@@ -101,7 +101,7 @@ describe('Unstable network, pub/sub sync', () => {
         await instances.waitForTimeout(5000);
       });
 
-      it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
+      it('messages that are published on one Asyngular instance should reach subscribers on a different Asyngular instance in the cluster', function () {
         assert.equal(publisherNodeInstance.failedToSendMessages.length, 0);
         assert.equal(subscriberNodeInstance.receivedMessages.length, publisherNodeInstance.sentMessages.length);
         assert.equal(subscriberNodeInstance.receivedMessages.length, 100);
@@ -114,14 +114,14 @@ describe('Unstable network, pub/sub sync', () => {
       let publisherNodeInstance;
 
       beforeEach(async function () {
-        instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
+        instanceDetailsList = instances.generateAGCInstanceClusterDetailsList({
           workerInstanceCount: 2,
           brokerInstanceCount: 1,
           stateInstanceStartPort: 7777,
           workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888
         });
-        let clusterDetails = await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
+        let clusterDetails = await instances.launchAGCInstanceCluster(instanceDetailsList, 2000);
         let stateInstanceIP = clusterDetails.stateInstanceIP;
 
         subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
@@ -135,12 +135,12 @@ describe('Unstable network, pub/sub sync', () => {
           return instanceDetails.type === 'broker';
         });
         let firstBroker = brokerInstanceDetailsList[0];
-        instances.stopSCCInstance(firstBroker.name);
+        instances.stopAGCInstance(firstBroker.name);
 
         // Wait for cluster to sync.
         await instances.waitForTimeout(1500);
 
-        instances.launchSCCInstance(firstBroker.type, firstBroker.port, 'scc-respawned-broker-1', stateInstanceIP, firstBroker.envs);
+        instances.launchAGCInstance(firstBroker.type, firstBroker.port, 'agc-respawned-broker-1', stateInstanceIP, firstBroker.envs);
 
         await instances.waitForTimeout(7000);
 
@@ -155,31 +155,28 @@ describe('Unstable network, pub/sub sync', () => {
         await instances.waitForTimeout(5000);
       });
 
-      it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
+      it('messages that are published on one Asyngular instance should reach subscribers on a different Asyngular instance in the cluster', function () {
         assert.equal(publisherNodeInstance.failedToSendMessages.length, 0);
         assert.equal(subscriberNodeInstance.receivedMessages.length, publisherNodeInstance.sentMessages.length);
         assert.equal(subscriberNodeInstance.receivedMessages.length, 100);
       });
     });
 
-    describe('Pub/sub channels sync after the scc-state instance crashes and restarts (with multiple worker and broker processes on scc-worker instances)', function () {
+    describe('Pub/sub channels sync after the agc-state instance crashes and restarts (with multiple worker and broker processes on agc-worker instances)', function () {
       let instanceDetailsList = [];
       let subscriberNodeInstance;
       let publisherNodeInstance;
 
       beforeEach(async function () {
-        instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
+        instanceDetailsList = instances.generateAGCInstanceClusterDetailsList({
           workerInstanceCount: 2,
           brokerInstanceCount: 1,
           stateInstanceStartPort: 7777,
           workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888,
-          workerInstanceEnvs: {
-            SOCKETCLUSTER_WORKERS: 4,
-            SOCKETCLUSTER_BROKERS: 4
-          }
+          workerInstanceEnvs: {}
         });
-        let clusterDetails = await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
+        let clusterDetails = await instances.launchAGCInstanceCluster(instanceDetailsList, 2000);
         let stateInstanceIP = clusterDetails.stateInstanceIP;
 
         subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
@@ -193,12 +190,12 @@ describe('Unstable network, pub/sub sync', () => {
           return instanceDetails.type === 'state';
         });
         let stateInstance = stateInstanceDetailsList[0];
-        instances.stopSCCInstance(stateInstance.name);
+        instances.stopAGCInstance(stateInstance.name);
 
         // Wait for cluster to sync.
         await instances.waitForTimeout(1500);
 
-        instances.launchSCCInstance(stateInstance.type, stateInstance.port, 'scc-respawned-state-1', null, stateInstance.envs);
+        instances.launchAGCInstance(stateInstance.type, stateInstance.port, 'agc-respawned-state-1', null, stateInstance.envs);
 
         await instances.waitForTimeout(10000);
 
@@ -213,31 +210,28 @@ describe('Unstable network, pub/sub sync', () => {
         await instances.waitForTimeout(5000);
       });
 
-      it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
+      it('messages that are published on one Asyngular instance should reach subscribers on a different Asyngular instance in the cluster', function () {
         assert.equal(publisherNodeInstance.failedToSendMessages.length, 0);
         assert.equal(subscriberNodeInstance.receivedMessages.length, publisherNodeInstance.sentMessages.length);
         assert.equal(subscriberNodeInstance.receivedMessages.length, 100);
       });
     });
 
-    describe('Pub/sub channels sync after the scc-state instance crashes and restarts (with multiple worker and broker processes on scc-broker instances)', function () {
+    describe('Pub/sub channels sync after the agc-state instance crashes and restarts (with multiple worker and broker processes on agc-broker instances)', function () {
       let instanceDetailsList = [];
       let subscriberNodeInstance;
       let publisherNodeInstance;
 
       beforeEach(async function () {
-        instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
+        instanceDetailsList = instances.generateAGCInstanceClusterDetailsList({
           workerInstanceCount: 2,
           brokerInstanceCount: 1,
           stateInstanceStartPort: 7777,
           workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888,
-          brokerInstanceEnvs: {
-            SOCKETCLUSTER_WORKERS: 4,
-            SOCKETCLUSTER_BROKERS: 4
-          }
+          brokerInstanceEnvs: {}
         });
-        let clusterDetails = await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
+        let clusterDetails = await instances.launchAGCInstanceCluster(instanceDetailsList, 2000);
         let stateInstanceIP = clusterDetails.stateInstanceIP;
 
         subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
@@ -251,12 +245,12 @@ describe('Unstable network, pub/sub sync', () => {
           return instanceDetails.type === 'state';
         });
         let stateInstance = stateInstanceDetailsList[0];
-        instances.stopSCCInstance(stateInstance.name);
+        instances.stopAGCInstance(stateInstance.name);
 
         // Wait for cluster to sync.
         await instances.waitForTimeout(1500);
 
-        instances.launchSCCInstance(stateInstance.type, stateInstance.port, 'scc-respawned-state-1', null, stateInstance.envs);
+        instances.launchAGCInstance(stateInstance.type, stateInstance.port, 'agc-respawned-state-1', null, stateInstance.envs);
 
         await instances.waitForTimeout(10000);
 
@@ -271,7 +265,7 @@ describe('Unstable network, pub/sub sync', () => {
         await instances.waitForTimeout(5000);
       });
 
-      it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
+      it('messages that are published on one Asyngular instance should reach subscribers on a different Asyngular instance in the cluster', function () {
         assert.equal(publisherNodeInstance.failedToSendMessages.length, 0);
         assert.equal(subscriberNodeInstance.receivedMessages.length, publisherNodeInstance.sentMessages.length);
         assert.equal(subscriberNodeInstance.receivedMessages.length, 100);
@@ -289,14 +283,14 @@ describe('Unstable network, pub/sub sync', () => {
       let publisherNodeInstance;
 
       beforeEach(async function () {
-        instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
+        instanceDetailsList = instances.generateAGCInstanceClusterDetailsList({
           workerInstanceCount: 2,
           brokerInstanceCount: 3,
           stateInstanceStartPort: 7777,
           workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888
         });
-        await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
+        await instances.launchAGCInstanceCluster(instanceDetailsList, 2000);
         subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
           targetPort: 8000,
           clientCount: 100,
@@ -307,8 +301,8 @@ describe('Unstable network, pub/sub sync', () => {
         let brokerInstanceDetailsList = instanceDetailsList.filter((instanceDetails) => {
           return instanceDetails.type === 'broker';
         });
-        instances.stopSCCInstance(brokerInstanceDetailsList[0].name);
-        instances.stopSCCInstance(brokerInstanceDetailsList[1].name);
+        instances.stopAGCInstance(brokerInstanceDetailsList[0].name);
+        instances.stopAGCInstance(brokerInstanceDetailsList[1].name);
         // Wait for cluster to sync.
         await instances.waitForTimeout(1500);
         publisherNodeInstance = await instances.launchIndirectPublisherNodeInstance('publisher', {
@@ -322,7 +316,7 @@ describe('Unstable network, pub/sub sync', () => {
         await instances.waitForTimeout(5000);
       });
 
-      it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
+      it('messages that are published on one Asyngular instance should reach subscribers on a different Asyngular instance in the cluster', function () {
         assert.equal(publisherNodeInstance.failedToSendMessages.length, 0);
         assert.equal(subscriberNodeInstance.receivedMessages.length, publisherNodeInstance.sentMessages.length);
         assert.equal(subscriberNodeInstance.receivedMessages.length, 100);
@@ -335,14 +329,14 @@ describe('Unstable network, pub/sub sync', () => {
       let publisherNodeInstance;
 
       beforeEach(async function () {
-        instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
+        instanceDetailsList = instances.generateAGCInstanceClusterDetailsList({
           workerInstanceCount: 2,
           brokerInstanceCount: 3,
           stateInstanceStartPort: 7777,
           workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888
         });
-        await instances.launchSCCInstanceCluster(instanceDetailsList, 0);
+        await instances.launchAGCInstanceCluster(instanceDetailsList, 0);
         subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
           targetPort: 8000,
           clientCount: 100,
@@ -353,8 +347,8 @@ describe('Unstable network, pub/sub sync', () => {
         let brokerInstanceDetailsList = instanceDetailsList.filter((instanceDetails) => {
           return instanceDetails.type === 'broker';
         });
-        instances.stopSCCInstance(brokerInstanceDetailsList[0].name);
-        instances.stopSCCInstance(brokerInstanceDetailsList[1].name);
+        instances.stopAGCInstance(brokerInstanceDetailsList[0].name);
+        instances.stopAGCInstance(brokerInstanceDetailsList[1].name);
         // Wait for cluster to sync.
         await instances.waitForTimeout(1500);
         publisherNodeInstance = await instances.launchIndirectPublisherNodeInstance('publisher', {
@@ -368,7 +362,7 @@ describe('Unstable network, pub/sub sync', () => {
         await instances.waitForTimeout(5000);
       });
 
-      it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
+      it('messages that are published on one Asyngular instance should reach subscribers on a different Asyngular instance in the cluster', function () {
         assert.equal(publisherNodeInstance.failedToSendMessages.length, 0);
         assert.equal(subscriberNodeInstance.receivedMessages.length, publisherNodeInstance.sentMessages.length);
         assert.equal(subscriberNodeInstance.receivedMessages.length, 100);
@@ -381,7 +375,7 @@ describe('Unstable network, pub/sub sync', () => {
       let publisherNodeInstance;
 
       beforeEach(async function () {
-        instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
+        instanceDetailsList = instances.generateAGCInstanceClusterDetailsList({
           workerInstanceCount: 2,
           brokerInstanceCount: 3,
           stateInstanceStartPort: 7777,
@@ -389,7 +383,7 @@ describe('Unstable network, pub/sub sync', () => {
           brokerInstanceStartPort: 8888
         });
 
-        let clusterDetails = await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
+        let clusterDetails = await instances.launchAGCInstanceCluster(instanceDetailsList, 2000);
         let stateInstanceIP = clusterDetails.stateInstanceIP;
 
         subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
@@ -403,20 +397,20 @@ describe('Unstable network, pub/sub sync', () => {
           return instanceDetails.type === 'broker';
         });
         let firstBroker = brokerInstanceDetailsList[0];
-        instances.stopSCCInstance(firstBroker.name);
+        instances.stopAGCInstance(firstBroker.name);
 
         // Wait for cluster to sync.
         await instances.waitForTimeout(1500);
 
-        instances.launchSCCInstance(firstBroker.type, firstBroker.port, 'scc-respawned-broker-1', stateInstanceIP, firstBroker.envs);
+        instances.launchAGCInstance(firstBroker.type, firstBroker.port, 'agc-respawned-broker-1', stateInstanceIP, firstBroker.envs);
 
         await instances.waitForTimeout(1500);
 
-        instances.stopSCCInstance('scc-respawned-broker-1');
+        instances.stopAGCInstance('agc-respawned-broker-1');
 
         await instances.waitForTimeout(1500);
 
-        instances.launchSCCInstance(firstBroker.type, firstBroker.port, 'scc-respawned-broker-2', stateInstanceIP, firstBroker.envs);
+        instances.launchAGCInstance(firstBroker.type, firstBroker.port, 'agc-respawned-broker-2', stateInstanceIP, firstBroker.envs);
 
         await instances.waitForTimeout(7000);
 
@@ -431,7 +425,7 @@ describe('Unstable network, pub/sub sync', () => {
         await instances.waitForTimeout(7000);
       });
 
-      it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
+      it('messages that are published on one Asyngular instance should reach subscribers on a different Asyngular instance in the cluster', function () {
         assert.equal(publisherNodeInstance.failedToSendMessages.length, 0);
         assert.equal(subscriberNodeInstance.receivedMessages.length, publisherNodeInstance.sentMessages.length);
         assert.equal(subscriberNodeInstance.receivedMessages.length, 100);
@@ -444,14 +438,14 @@ describe('Unstable network, pub/sub sync', () => {
       let publisherNodeInstance;
 
       beforeEach(async function () {
-        instanceDetailsList = instances.generateSCCInstanceClusterDetailsList({
+        instanceDetailsList = instances.generateAGCInstanceClusterDetailsList({
           workerInstanceCount: 2,
           brokerInstanceCount: 1,
           stateInstanceStartPort: 7777,
           workerInstanceStartPort: 8000,
           brokerInstanceStartPort: 8888
         });
-        let clusterDetails = await instances.launchSCCInstanceCluster(instanceDetailsList, 2000);
+        let clusterDetails = await instances.launchAGCInstanceCluster(instanceDetailsList, 2000);
         let stateInstanceIP = clusterDetails.stateInstanceIP;
 
         subscriberNodeInstance = await instances.launchSubscriberNodeInstance('subscriber', {
@@ -465,12 +459,12 @@ describe('Unstable network, pub/sub sync', () => {
           return instanceDetails.type === 'broker';
         });
         let firstBroker = brokerInstanceDetailsList[0];
-        instances.stopSCCInstance(firstBroker.name);
+        instances.stopAGCInstance(firstBroker.name);
 
         // Wait for cluster to sync.
         await instances.waitForTimeout(1500);
 
-        instances.launchSCCInstance(firstBroker.type, firstBroker.port, 'scc-respawned-broker-1', stateInstanceIP, firstBroker.envs);
+        instances.launchAGCInstance(firstBroker.type, firstBroker.port, 'agc-respawned-broker-1', stateInstanceIP, firstBroker.envs);
 
         await instances.waitForTimeout(7000);
 
@@ -485,7 +479,7 @@ describe('Unstable network, pub/sub sync', () => {
         await instances.waitForTimeout(5000);
       });
 
-      it('messages that are published on one SC instance should reach subscribers on a different SC instance in the cluster', function () {
+      it('messages that are published on one Asyngular instance should reach subscribers on a different Asyngular instance in the cluster', function () {
         assert.equal(publisherNodeInstance.failedToSendMessages.length, 0);
         assert.equal(subscriberNodeInstance.receivedMessages.length, publisherNodeInstance.sentMessages.length);
         assert.equal(subscriberNodeInstance.receivedMessages.length, 100);

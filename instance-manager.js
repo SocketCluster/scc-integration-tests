@@ -16,18 +16,15 @@ InstanceManager.prototype.reset = function () {
   this.count = 0;
 };
 
-InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPort, instanceName, stateServerHost, customEnvs) {
+InstanceManager.prototype.launchAGCInstance = function (instanceType, externalPort, instanceName, stateServerHost, customEnvs) {
   stateServerHost = stateServerHost || '127.0.0.1';
   let instanceTypeConfig = this.config[instanceType];
   return new Promise((resolve, reject) => {
     let volumeFlag = '';
     let envFlag = '';
     if (instanceType !== 'state') {
-      envFlag = ` -e "SCC_STATE_SERVER_HOST=${stateServerHost}"`;
+      envFlag = ` -e "AGC_STATE_SERVER_HOST=${stateServerHost}"`;
       if (instanceType === 'worker') {
-        envFlag += ` -e "SOCKETCLUSTER_MASTER_CONTROLLER=/usr/src/app/server.js"`;
-        envFlag += ` -e "SOCKETCLUSTER_WORKER_CONTROLLER=/usr/src/app/worker.js"`;
-        envFlag += ` -e "SOCKETCLUSTER_BROKER_CONTROLLER=/usr/src/app/broker.js"`;
         volumeFlag = ` -v ${this.absoluteControllerPath}:/usr/src/app/`;
       }
     }
@@ -36,7 +33,8 @@ InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPo
         envFlag += ` -e "${key}=${customEnvs[key]}"`;
       });
     }
-    // console.log('Launching SCC instance:', `docker run -d -p ${externalPort}:${instanceTypeConfig.internalContainerPort}${volumeFlag}${envFlag} --name ${instanceName} ${instanceTypeConfig.imageName}:${instanceTypeConfig.versionTag}`);
+
+    // console.log('Launching AGC instance:', `docker run -d -p ${externalPort}:${instanceTypeConfig.internalContainerPort}${volumeFlag}${envFlag} --name ${instanceName} ${instanceTypeConfig.imageName}:${instanceTypeConfig.versionTag}`);
     let instanceProcess = exec(`docker run -d -p ${externalPort}:${instanceTypeConfig.internalContainerPort}${volumeFlag}${envFlag} --name ${instanceName} ${instanceTypeConfig.imageName}:${instanceTypeConfig.versionTag}`, (err) => {
       if (err) {
         reject(err);
@@ -48,9 +46,9 @@ InstanceManager.prototype.launchSCCInstance = function (instanceType, externalPo
   });
 };
 
-InstanceManager.prototype.stopSCCInstance = function (instanceName) {
+InstanceManager.prototype.stopAGCInstance = function (instanceName) {
   return new Promise((resolve, reject) => {
-    // console.log('Stopping SCC instance:', `docker stop -t 0 ${instanceName}`);
+    // console.log('Stopping AGC instance:', `docker stop -t 0 ${instanceName}`);
     exec(`docker stop -t 0 ${instanceName}`, (err) => {
       if (err) {
         reject(err);
@@ -81,7 +79,7 @@ InstanceManager.prototype.isInstanceRunning = async function (instanceName) {
   return instanceNameList.indexOf(instanceName) !== -1;
 };
 
-function removeSCCInstance(instanceName) {
+function removeAGCInstance(instanceName) {
   return new Promise((resolve, reject) => {
     exec(`docker rm ${instanceName}`, (err) => {
       if (err) {
@@ -93,14 +91,14 @@ function removeSCCInstance(instanceName) {
   });
 };
 
-InstanceManager.prototype.destroySCCInstance = async function (instanceName) {
-  await this.stopSCCInstance(instanceName);
-  await this.removeSCCInstance(instanceName);
+InstanceManager.prototype.destroyAGCInstance = async function (instanceName) {
+  await this.stopAGCInstance(instanceName);
+  await this.removeAGCInstance(instanceName);
 };
 
-InstanceManager.prototype.destroyAllSCCInstances = function () {
+InstanceManager.prototype.destroyAllAGCInstances = function () {
   let destroyInstanceListPromises = this.activeDockerInstanceList.map((instanceName) => {
-    return this.destroySCCInstance(instanceName);
+    return this.destroyAGCInstance(instanceName);
   });
   return Promise.all(destroyInstanceListPromises);
 };
@@ -138,11 +136,11 @@ InstanceManager.prototype.getDockerInstanceIP = function (instanceName) {
   });
 };
 
-InstanceManager.prototype.generateSCCInstanceName = function (instanceType) {
-  return `scc-${instanceType}-` + this.count++;
+InstanceManager.prototype.generateAGCInstanceName = function (instanceType) {
+  return `agc-${instanceType}-` + this.count++;
 };
 
-InstanceManager.prototype.generateSCCInstanceClusterDetailsList = function (options) {
+InstanceManager.prototype.generateAGCInstanceClusterDetailsList = function (options) {
   let instanceDetailList = [];
 
   let stateInstanceStartPort = options.stateInstanceStartPort || 7777;
@@ -155,14 +153,14 @@ InstanceManager.prototype.generateSCCInstanceClusterDetailsList = function (opti
 
   instanceDetailList.push({
     type: 'state',
-    name: this.generateSCCInstanceName('state'),
+    name: this.generateAGCInstanceName('state'),
     port: stateInstanceStartPort,
     envs: stateInstanceEnvs
   });
   for (let i = 0; i < options.workerInstanceCount; i++) {
     instanceDetailList.push({
       type: 'worker',
-      name: this.generateSCCInstanceName('worker'),
+      name: this.generateAGCInstanceName('worker'),
       port: workerInstanceStartPort + i,
       envs: workerInstanceEnvs
     });
@@ -170,7 +168,7 @@ InstanceManager.prototype.generateSCCInstanceClusterDetailsList = function (opti
   for (let i = 0; i < options.brokerInstanceCount; i++) {
     instanceDetailList.push({
       type: 'broker',
-      name: this.generateSCCInstanceName('broker'),
+      name: this.generateAGCInstanceName('broker'),
       port: brokerInstanceStartPort + i,
       envs: brokerInstanceEnvs
     });
@@ -186,12 +184,12 @@ InstanceManager.prototype.waitForTimeout = function (delay) {
   });
 };
 
-InstanceManager.prototype.launchSCCInstanceCluster = async function (clusterDetailsList, readyDelay) {
+InstanceManager.prototype.launchAGCInstanceCluster = async function (clusterDetailsList, readyDelay) {
   let stateInstanceDetails = clusterDetailsList.filter((instanceDetails) => {
     return instanceDetails.type === 'state';
   })[0];
 
-  await this.launchSCCInstance(stateInstanceDetails.type, stateInstanceDetails.port, stateInstanceDetails.name, null, stateInstanceDetails.envs);
+  await this.launchAGCInstance(stateInstanceDetails.type, stateInstanceDetails.port, stateInstanceDetails.name, null, stateInstanceDetails.envs);
   let stateInstanceIP = await this.getDockerInstanceIP(stateInstanceDetails.name);
 
   let otherInstanceDetailsList = clusterDetailsList.filter((instanceDetails) => {
@@ -199,7 +197,7 @@ InstanceManager.prototype.launchSCCInstanceCluster = async function (clusterDeta
   });
 
   let launchInstancePromises = otherInstanceDetailsList.map((instanceDetails) => {
-    return this.launchSCCInstance(instanceDetails.type, instanceDetails.port, instanceDetails.name, stateInstanceIP, instanceDetails.envs);
+    return this.launchAGCInstance(instanceDetails.type, instanceDetails.port, instanceDetails.name, stateInstanceIP, instanceDetails.envs);
   });
   await Promise.all(launchInstancePromises);
   if (readyDelay) {
