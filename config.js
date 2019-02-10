@@ -8,7 +8,7 @@ module.exports = {
   },
   worker: {
     imageName: 'socketcluster/asyngular',
-    versionTag: 'v5.0.1',
+    versionTag: 'v5.0.7',
     internalContainerPort: 8000
   },
   broker: {
