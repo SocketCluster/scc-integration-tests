@@ -130,7 +130,7 @@ if (AGC_STATE_SERVER_HOST) {
         publishFail: 0
       };
     }
-    var poolIndexStats = stats[data.targetURI][data.poolIndex];
+    let poolIndexStats = stats[data.targetURI][data.poolIndex];
     poolIndexStats[event]++;
   }
 
