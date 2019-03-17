@@ -1,6 +1,6 @@
 {
   "name": "agc-integration-tests",
-  "version": "5.3.3",
+  "version": "5.3.4",
   "description": "Integration tests for AGC",
   "main": "index.js",
   "scripts": {
