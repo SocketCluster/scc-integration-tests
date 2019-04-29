@@ -3,7 +3,7 @@ let path = require('path');
 module.exports = {
   state: {
     imageName: 'socketcluster/agc-state',
-    versionTag: 'v5.3.2',
+    versionTag: 'v5.4.0',
     internalContainerPort: 7777
   },
   worker: {
