@@ -1,6 +1,6 @@
 {
   "name": "agc-integration-tests",
-  "version": "6.1.0",
+  "version": "6.1.1",
   "description": "Integration tests for AGC",
   "main": "index.js",
   "scripts": {
@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/SocketCluster/agc-integration-tests#readme",
   "dependencies": {
-    "agc-broker-client": "^6.1.0",
+    "agc-broker-client": "^6.1.1",
     "asyngular-client": "^6.2.0",
     "minimist": "^1.2.0",
     "mocha": "^5.0.4",
