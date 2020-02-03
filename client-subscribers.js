@@ -1,4 +1,4 @@
-let asyngularClient = require('asyngular-client');
+let socketClusterClient = require('socketcluster-client');
 let argv = require('minimist')(process.argv.slice(2));
 
 let options = JSON.parse(argv.options || '{}');
@@ -22,7 +22,7 @@ let pendingSubscriptionPromises = [];
 let c = 0;
 
 for (let i = 0; i < clientCount; i++) {
-  let socket = asyngularClient.create(clientOptions);
+  let socket = socketClusterClient.create(clientOptions);
 
   (async () => {
     for await (let {error} of socket.listener('error')) {

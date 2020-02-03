@@ -1,13 +1,13 @@
 let url = require('url');
-let asyngularClient = require('asyngular-client');
+let socketClusterClient = require('socketcluster-client');
 
 let trailingPortNumberRegex = /:[0-9]+$/;
 
-function StatsCollector(agcInstanceClusterDetailsList) {
+function StatsCollector(sccInstanceClusterDetailsList) {
   this.clients = [];
-  this.agcInstanceClusterDetailsList = agcInstanceClusterDetailsList;
+  this.sccInstanceClusterDetailsList = sccInstanceClusterDetailsList;
 
-  let targets = this.agcInstanceClusterDetailsList
+  let targets = this.sccInstanceClusterDetailsList
   .filter((instanceDetails) => {
     return instanceDetails.type === 'worker';
   });
@@ -17,7 +17,7 @@ function StatsCollector(agcInstanceClusterDetailsList) {
       hostname: '127.0.0.1',
       port: instanceDetails.port
     };
-    let socket = asyngularClient.create(clientOptions);
+    let socket = socketClusterClient.create(clientOptions);
     socket.instanceName = instanceDetails.name;
 
     (async () => {
