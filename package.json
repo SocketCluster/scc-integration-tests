@@ -1,6 +1,6 @@
 {
   "name": "scc-integration-tests",
-  "version": "7.0.0",
+  "version": "8.0.0",
   "description": "Integration tests for SCC",
   "main": "index.js",
   "scripts": {
@@ -24,8 +24,8 @@
   },
   "homepage": "https://github.com/SocketCluster/scc-integration-tests#readme",
   "dependencies": {
-    "scc-broker-client": "^7.0.2",
-    "socketcluster-client": "^15.1.0",
+    "scc-broker-client": "^8.0.0",
+    "socketcluster-client": "^16.0.1",
     "minimist": "^1.2.0",
     "mocha": "^5.0.4",
     "uuid": "^3.2.1"
