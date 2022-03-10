@@ -165,7 +165,7 @@ describe('Stable network, pub/sub sync after scaling out', () => {
         uniqueChannelCount: 100,
         channelsPerClient: 1
       });
-      await instances.waitForTimeout(4000);
+      await instances.waitForTimeout(5000);
       publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
         targetPort: 8001,
         clientCount: 10,
@@ -176,7 +176,7 @@ describe('Stable network, pub/sub sync after scaling out', () => {
       });
       await instances.launchSCCInstance('worker', 8002, instances.generateSCCInstanceName('worker'), clusterInfo.stateInstanceIP)
       await instances.launchSCCInstance('broker', 8889, instances.generateSCCInstanceName('broker'), clusterInfo.stateInstanceIP),
-      await instances.waitForTimeout(5000);
+      await instances.waitForTimeout(7000);
     });
 
     it('messages that are published on one SocketCluster instance should reach subscribers on a different SocketCluster instance in the cluster', function () {

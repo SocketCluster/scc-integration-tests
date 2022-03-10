@@ -82,14 +82,14 @@ describe('Unstable network, pub/sub sync', () => {
           uniqueChannelCount: 100,
           channelsPerClient: 1
         });
-        await instances.waitForTimeout(1000);
+        await instances.waitForTimeout(2000);
         let brokerInstanceDetailsList = instanceDetailsList.filter((instanceDetails) => {
           return instanceDetails.type === 'broker';
         });
         instances.stopSCCInstance(brokerInstanceDetailsList[0].name);
         instances.stopSCCInstance(brokerInstanceDetailsList[1].name);
         // Wait for cluster to sync.
-        await instances.waitForTimeout(1500);
+        await instances.waitForTimeout(2500);
         publisherNodeInstance = await instances.launchPublisherNodeInstance('publisher', {
           targetPort: 8001,
           clientCount: 10,
@@ -98,7 +98,7 @@ describe('Unstable network, pub/sub sync', () => {
           publishInterval: 100,
           publishRandomness: 100
         });
-        await instances.waitForTimeout(5000);
+        await instances.waitForTimeout(7000);
       });
 
       it('messages that are published on one SocketCluster instance should reach subscribers on a different SocketCluster instance in the cluster', function () {
@@ -343,14 +343,14 @@ describe('Unstable network, pub/sub sync', () => {
           uniqueChannelCount: 100,
           channelsPerClient: 1
         });
-        await instances.waitForTimeout(1000);
+        await instances.waitForTimeout(2000);
         let brokerInstanceDetailsList = instanceDetailsList.filter((instanceDetails) => {
           return instanceDetails.type === 'broker';
         });
         instances.stopSCCInstance(brokerInstanceDetailsList[0].name);
         instances.stopSCCInstance(brokerInstanceDetailsList[1].name);
         // Wait for cluster to sync.
-        await instances.waitForTimeout(1500);
+        await instances.waitForTimeout(2500);
         publisherNodeInstance = await instances.launchIndirectPublisherNodeInstance('publisher', {
           targetPort: 8001,
           clientCount: 10,
@@ -359,7 +359,7 @@ describe('Unstable network, pub/sub sync', () => {
           publishInterval: 100,
           publishRandomness: 100
         });
-        await instances.waitForTimeout(5000);
+        await instances.waitForTimeout(7000);
       });
 
       it('messages that are published on one SocketCluster instance should reach subscribers on a different SocketCluster instance in the cluster', function () {
